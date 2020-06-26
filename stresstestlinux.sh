@@ -15,6 +15,7 @@ uptime
 echo "#############################################"
 stress --cpu  8 --timeout 20
 uptime
+echo ##############################################
 echo "more tests"
 #To spwan 4 workers spinning on sqrt(), 2 workers spwaning on sync(), 2 workers on malloc()/free(), with a time out of 20 seconds and allocate a memory of 256MB per vm worker
 uptime
