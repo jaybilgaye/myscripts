@@ -1,0 +1,14 @@
+
+Get API keys:
+
+curl -H "Authorization: Bearer eyJrIjoiaVJBa0E5WXpBRDlSOW56alRyVmliTHplYzYyZWdvNzMiLCJuIjoia2V5MSIsImlkIjoxfQ==" http://10.104.0.2:3000/api/search
+
+
+
+Query to run:
+
+curl -X POST --insecure -H "Authorization: Bearer eyJrIjoiaVJBa0E5WXpBRDlSOW56alRyVmliTHplYzYyZWdvMSIsImlkIjoxfQ==" -H "Content-Type: application/json" -d "{\"dashboard\": $(cat 2.json)}" http://139.59.245.176:3000/api/dashboards/import
+
+Verify:
+
+curl -H "Authorization: Bearer eyJrIjoiaVJBa0E5WXpBRDlSOW56alRyVmliTHplYzYyZWdvNzMiLCJuIjoia2V5MSIsImlkIjoxfQ==" http://10.104.0.2:3000/api/search
