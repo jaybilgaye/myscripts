@@ -1,4 +1,7 @@
 #!/bin/bash
+if [ ! -e /usr/bin/stress ] ; then
+  apt-get install stress
+
 yum install -y epel-release
 yum install -y stress
 echo "Stress Test started with less load "
