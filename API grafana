@@ -12,3 +12,31 @@ curl -X POST --insecure -H "Authorization: Bearer eyJrIjoiaVJBa0E5WXpBRDlSOW56al
 Verify:
 
 curl -H "Authorization: Bearer eyJrIjoiaVJBa0E5WXpBRDlSOW56alRyVmliTHplYzYyZWdvNzMiLCJuIjoia2V5MSIsImlkIjoxfQ==" http://10.104.0.2:3000/api/search
+
+
+OR
+
+  174  vi 5.json
+  175  jq '{dashboard: ., folderId:0, overwrite:true} | .dashboard.id = null' 5.json > 5-dashboards.json.tmp
+  176  vi 5-dashboards.json.tmp
+  177  clear
+  178  curl "http://139.59.245.176:3000/api/dashboards/db" -H "Authorization: Bearer eyJrIjoiaVJBa0E5WXpBRDlSOW56alRyVmliTHplYzYyZWdvNzMiLCJuIjoia2V5MSIsImlkIjoxfQ==" -H "Content-Type: application/json" --data-binary "@5-dashboards.json.tmp"
+  179  curl -H "Authorization: Bearer eyJrIjoiaVJBa0E5WXpBRDlSOW56alRyVmliTHplYzYyZWdvNzMiLCJuIjoia2V5MSIsImlkIjoxfQ==" http://10.104.0.2:3000/api/search
+
+
+
+
+=================
+https://github.com/hagen1778/grafana-import-export/issues/10
+
+jq '{dashboard: ., folderId:0, overwrite:true} | .dashboard.id = null' 5.json > 5-dashboards.json.tmp
+
+  curl "https://${GRAFANA_HOSTNAME}/api/dashboards/db" \
+    -u "${GRAFANA_CURL_CREDENTIALS}" \
+    -H "Content-Type: application/json" \
+    --data-binary "@update-dashboards.json.tmp"
+
+
+Using: 
+curl "http://139.59.245.176:3000/api/dashboards/db" -H "Authorization: Bearer eyJrIjoiaVJBa0E5WXpBRDlSOW56alRyVmliTHplYzYyZWdvNzMiLCJuIjoia2V5MSIsImlkIjoxfQ==" -H "Content-Type: application/json" --data-binary "@5-dashboards.json.tmp"
+
