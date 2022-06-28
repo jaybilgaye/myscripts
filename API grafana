@@ -25,6 +25,11 @@ OR
 
 
 
+Get dashoard bu Uid
+curl -H "Authorization: Bearer eyJrIjoiaVJBa0E5WXpBRDlSOW56alRyVmliTHplYzYyZWdvNzMiLCJuIjoia2V5MSIsI=" http://10.104.0.2:3000/api/dashboards/uid/SoeMFGCn2
+
+
+
 
 =================
 https://github.com/hagen1778/grafana-import-export/issues/10
