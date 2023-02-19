@@ -1,0 +1,386 @@
+
+
+
+----
+oot@ubuntu-s-4vcpu-8gb-syd1-01:~# history
+    1  clear
+    2  ls
+    3  sudo apt update
+    4  sudo apt install apt-transport-https ca-certificates curl software-properties-common
+    5  sudo apt update
+    6  sudo apt install apt-transport-https ca-certificates curl software-properties-common
+    7  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    8  sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+    9  apt-cache policy docker-ce
+   10  sudo apt install docker-ce
+   11  sudo systemctl status docker
+   12  clear
+   13  pwd
+   14  ls
+   15  ll
+   16  clear
+   17  docker
+   18  docker
+   19  ls
+   20  git clone https://github.com/mathsigit/hbase-on-docker.git
+   21  ll
+   22  cd hbase-on-docker/
+   23  ls
+   24  docker-compose -f build-images.yml build
+   25  apt  install docker-compose
+   26  docker-compose -f build-images.yml build
+   27  docker-compose up -d
+   28  docker ps -all
+   29  docker exec -it master bash
+   30  docker exec -it slave bash
+   31  docker exec -it slave1 bash
+   32  docker
+   33  docker ps
+   34  clear
+   35  hostname
+   36  hostname -f
+   37  history
+   38  hdfs dfs -ls /
+   39  docker exec -it master bash
+   40  docker ps -all
+   41  cd hbase-on-docker/
+   42  docker-compose up -d
+   43  docker exec -it master bash
+   44  docker exec -it slave1 bash
+   45  docker exec -it slave2 bash
+   46  /opt/bootstrap.sh SLAVE master
+   47  docker exec -it slave2 bash
+   48  docker exec -it slave1 bash
+   49  docker exec -it master bash
+   50  docker exec -it slave1 bash
+   51  docker exec -it slave2 bash
+   52  clear
+   53  docker-compose start
+   54  docker exec -it slave2 bash
+   55  hdfs dfs -ls /
+   56  docker exec -it master bash
+
+
+jmx_hbase.yaml
+
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+rules:
+- pattern: Hadoop<service=HBase, name=RegionServer, sub=Regions><>Namespace_([^\W_]+)_table_([^\W_]+)_region_([^\W_]+)_metric_(\w+)
+  name: HBase_metric_$4
+  labels:
+    namespace: "$1"
+    table: "$2"
+    region: "$3"
+
+
+# two hbase masters
+  - targets:
+    - m-1:26010
+    - m-2:26010
+    labels:
+      type: master
+
+
+
+bash /opt/hbase/bin/hbase-daemon.sh --config /opt/hbase/conf start master
+
+
+-javaagent:/data/jmx_exporter/jmx_prometheus_javaagent-0.13.1-SNAPSHOT.jar=0.0.0.0:26010:/data/jmx_exporter/config.yaml
+
+
+export HBASE_JMX_BASE="-Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false"
+
+export HBASE_OPTS="$HBASE_OPTS -javaagent:/test/jmx_exporter-parent-0.17.2/jmx_prometheus_javaagent-0.17.2.jar=27000:/test/jmx_exporter-parent-0.17.2/config.yaml"
+
+
+
+# two hbase masters
+  - targets:
+    - m-1:27000
+    - m-2:27000
+    labels:
+      type: master
+
+
+
+
+
+=====
+Follow:
+
+https://github.com/mathsigit/hbase-on-docker
+
+
+
+Get Hbase data:
+
+    hdfs dfs -ls /
+    vi importsv
+    
+    rowkey000000000,Test1,Test2,Test3,Test4,Test5,Test6,Test7,Test8,Test9,Test10
+
+
+
+    hdfs dfs -copyFromLocal importsv /tmp/
+    hdfs dfs -ls /tmp/
+    
+    hbase shell
+    
+    create 'bktable', {NAME => 'cf'},   {SPLITS => ['rowkey033333333', 'rowkey066666666']}
+    
+    list
+
+
+    exit
+     
+
+    hbase org.apache.hadoop.hbase.mapreduce.ImportTsv -Dimporttsv.columns=HBASE_ROW_KEY,cf:c1,cf:c2,cf:c3,cf:c4,cf:c5,cf:c6,cf:c7,cf:c8,cf:c9,cf:c10 -Dimporttsv.skip.bad.lines=false '-Dimporttsv.separator=,' -Dimporttsv.bulk.output=hdfs://master:9000/tmp/bktableoutput bktable hdfs://master:9000/tmp/importsv
+    hbase org.apache.hadoop.hbase.tool.LoadIncrementalHFiles hdfs://master:9000/tmp/bktableoutput bktable
+    8  hbase shell
+
+
+
+
+
+
+Setup /opt/hbase/conf/hbase-env.sh
+
+# Extra Java runtime options.
+# Below are what we set by default.  May only work with SUN JVM.
+# For more on why as well as other possible settings,
+# see http://wiki.apache.org/hadoop/PerformanceTuning
+export HBASE_OPTS="-XX:+UseConcMarkSweepGC"
+export HBASE_OPTS="$HBASE_OPTS -javaagent:/test/jmx_prometheus_javaagent-0.17.2.jar=5555:/test/config.yaml"
+
+get file:
+
+wget https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.17.2/jmx_prometheus_javaagent-0.17.2.jar
+
+
+vi /test/jmx_exporter-parent-0.17.2/config.yaml
+
+
+[root@master test]# cat config.yaml
+rules:
+- pattern: Hadoop<service=HBase, name=RegionServer, sub=Regions><>Namespace_([^\W_]+)_table_([^\W_]+)_region_([^\W_]+)_metric_(\w+)
+  name: HBase_metric_$4
+  labels:
+    namespace: "$1"
+    table: "$2"
+    region: "$3"
+- pattern: Hadoop<service=(\w+), name=(\w+), sub=(\w+)><>([\w._]+)
+  name: hadoop_$1_$4
+  labels:
+    "name": "$2"
+    "sub": "$3"
+- pattern: .+
+
+
+/opt/hbase/conf/hbase-env.sh 
+
+# Extra Java runtime options.
+# Below are what we set by default.  May only work with SUN JVM.
+# For more on why as well as other possible settings,
+# see http://wiki.apache.org/hadoop/PerformanceTuning
+export HBASE_OPTS="-XX:+UseConcMarkSweepGC"
+export HBASE_OPTS="$HBASE_OPTS -javaagent:/test/jmx_prometheus_javaagent-0.17.2.jar=5555:/test/config.yaml"
+
+
+
+
+bash /opt/hbase/bin/hbase-daemon.sh --config /opt/hbase/conf start master
+bash /opt/hbase/bin/hbase-daemon.sh --config /opt/hbase/conf start regionserver
+
+
+hadoop_hbase_numregionservers{instance=~"$instance"}
+
+less /opt/hbase/logs/hbase--master-master.log
+less /opt/hbase/logs/hbase--master-master.out
+
+
+curl localhost:27000
+
+
+    - "8042:8042"
+      # Historyserver port
+      - "19888:19888"
+      # exporters
+      - "5555:5555"
+      - "6666:6666"
+      # HBase port
+      - "${HBASE_PORT_010}:${HBASE_PORT_010}"
+      - "${HBASE_PORT_030}:${HBASE_PORT_030}"
+    expose:
+      - "50010"
+      - "50020"
+      - "50070"
+      - "50075"
+      - "50090"
+      - "8020"
+      - "9000"
+      - "10020"
+      - "19888"
+      - "8030"
+      - "8031"
+      - "8033"
+      - "8040"
+      - "49707"
+      - "2122"
+      - "2181"
+      - "5555"
+      - "6666"
+  slave:
+
+
+
+Now ,,
+
+expose regions server.
+
+
+export HBASE_REGIONSERVER_OPTS="$HBASE_REGIONSERVER_OPTS -javaagent:/test/jmx_prometheus_javaagent-0.17.2.jar=5555:/test/config.yaml"
+
+
+-------
+
+https://github.com/mathsigit/hbase-on-docker
+
+
+root@ubuntu-s-4vcpu-8gb-syd1-01:~/hbase-on-docker# cat common.yml
+version: "2.0"
+services:
+  baseeenv:
+    env_file:
+      - ./etc/profile.env
+    tty: true
+    volumes:
+      - ./centos/start-service.sh:/opt/start-service.sh
+      - ./etc/slaves:/opt/hadoop/etc/hadoop/slaves
+      - ./etc/slaves:/opt/hbase/conf/regionservers
+      - ./etc/ready-config.sh:/opt/ready-config.sh
+      - ./etc/bootstrap.sh:/opt/bootstrap.sh
+    extra_hosts:
+      - ${NODE_HOST_MASTER}:${NODE_IP_MASTER}
+      - ${NODE_HOST_SLAVE1}:${NODE_IP_SLAVE1}
+      - ${NODE_HOST_SLAVE2}:${NODE_IP_SLAVE2}
+  master:
+    extends: baseeenv
+    ports:
+      - "50070:50070"
+      #Yran port
+      - "8088:8088"
+      # AM port
+      - "8042:8042"
+      # Historyserver port
+      - "19888:19888"
+      - "5555:5555"
+      - "5556:5556"
+      - "5557:5557"
+      - "5558:5558"
+      # HBase port
+      - "${HBASE_PORT_010}:${HBASE_PORT_010}"
+      - "${HBASE_PORT_030}:${HBASE_PORT_030}"
+    expose:
+      - "50010"
+      - "50020"
+      - "50070"
+      - "50075"
+      - "50090"
+      - "8020"
+      - "9000"
+      - "10020"
+      - "19888"
+      - "8030"
+      - "8031"
+      - "8033"
+      - "8040"
+      - "49707"
+      - "2122"
+      - "5555"
+      - "5556"
+      - "5557"
+      - "5558"
+      - "2181"
+  slave1:
+    extends: baseeenv
+    ports:
+      - "5559:5559"
+      - "5560:5560"
+    expose:
+      - "5559"
+      - "5560"
+  slave2:
+    extends: baseeenv
+    ports:
+      - "5561:5561"
+      - "5562:5562"
+    expose:
+      - "5561"
+      - "5562"
+  slave:
+    extends: baseeenv
+
+
+appsumo.8odi.net/kjLg6M
+
+
+root@ubuntu-s-4vcpu-8gb-syd1-01:~/hbase-on-docker# cat docker-compose.yml
+version: "2"
+services:
+  slave1:
+    extends:
+      file: common.yml
+      service: slave1
+    image: mathstana/hbase:${HBASE_VERSION}
+    container_name: ${NODE_HOST_SLAVE1}
+    hostname: ${NODE_HOST_SLAVE1}
+    entrypoint: /opt/bootstrap.sh SLAVE ${NODE_HOST_MASTER}
+    networks:
+      docker_net:
+        ipv4_address: ${NODE_IP_SLAVE1}
+
+  slave2:
+    extends:
+      file: common.yml
+      service: slave2
+    image: mathstana/hbase:${HBASE_VERSION}
+    container_name: ${NODE_HOST_SLAVE2}
+    hostname: ${NODE_HOST_SLAVE2}
+    entrypoint: /opt/bootstrap.sh SLAVE ${NODE_HOST_MASTER}
+    networks:
+      docker_net:
+        ipv4_address: ${NODE_IP_SLAVE2}
+
+  master:
+    extends:
+      file: common.yml
+      service: master
+    image: mathstana/hbase:${HBASE_VERSION}
+    container_name: ${NODE_HOST_MASTER}
+    hostname: ${NODE_HOST_MASTER}
+    depends_on:
+      - slave1
+      - slave2
+    links:
+      - slave1
+      - slave2
+    entrypoint: /opt/bootstrap.sh MASTER ${NODE_HOST_MASTER}
+    networks:
+      docker_net:
+        ipv4_address: ${NODE_IP_MASTER}
+
+networks:
+  docker_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "${SUBNET}"
+
+
+
+
+
+          
+          
+          
