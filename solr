@@ -1,0 +1,33 @@
+https://subscription.packtpub.com/book/data/9781783553150/7/ch07lvl1sec87/moving-shards-between-nodes
+
+Notes: One way to achieve this:
+
+
+Imagine a situation where you reach a limit of your current deployment—the number of shards is just not enough. For example, the indexing throughput is lower and lower, because the disks are not able to keep up. Of course, one of the possible solutions is to spread the index across more shards; however, you already have a collection and you want to keep the data and reindexing is not an option, because you don't have the original data. Solr can help you with such situations by allowing splitting shards of already created collections. This recipe will show you how to do it.
+
+
+We have four nodes and we don't utilize them fully. We can say that these two nodes in which we have our shards are almost fully utilized. What we can do is create a new collection and reindex the data or we can split shards of the already created collection. Let's go with the second option:
+
+Solution:
+Split shards of the already created collection.
+
+Split shards of collections
+- ranger_audits
+
+Delete the original shards
+
+
+We can now spread the shards across the cluster, and we do this in the Moving shards between nodes recipe later in this chapter.
+
+
+Moving shards between nodes
+
+
+There are moments where we want to move shards between nodes in SolrCloud cluster. Until now, the Solr Collections API doesn't have a command telling Solr to move a single shard to another node. We need to do such an operation manually. For example, let's assume that we want to exchange one of the nodes in our cluster with a new server, but we don't want any downtime or interruptions to our service. This recipe will show you how to do that.
+
+
+We need to create a new replica on new node.
+
+Wait for replication to complete.
+
+Delete replica
