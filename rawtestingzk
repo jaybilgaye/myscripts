@@ -1,0 +1,625 @@
+[root@machine4 ~]# cat /usr/lib/systemd/system/zookeeper.service
+[Unit]
+Description=Zookeeper Service
+
+[Service]
+Type=simple
+WorkingDirectory=/app/zookeeper/apache-zookeeper-3.5.5-bin
+PIDFile=/hadoop/zookeeper/zookeeper_server.pid
+SyslogIdentifier=zookeeper
+User=zookeeper
+Group=zookeeper
+ExecStart=/app/zookeeper/apache-zookeeper-3.5.5-bin/bin/zkServer.sh start
+ExecStop=/app/zookeeper/apache-zookeeper-3.5.5-bin/bin/zkServer.sh stop
+Restart=always
+TimeoutSec=20
+SuccessExitStatus=130 143
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+
+======
+
+
+
+
+2. Using https://medium.com/@sanchitbansal26/how-to-migrate-kafka-cluster-with-no-downtime-58c216129058
+
+1. Migrate Zookeeper.
+2. Add new brokers to zookeeper one by one.
+
+
+
+
+Setup ZK on Digital Ocean:
+
+Open Firewall from digital ocean:
+
+
+[root@machine4 conf]# cat /hadoop/zookeeper/myid
+3
+
+
+[root@machine4 conf]# cat zoo.cfg
+# The number of milliseconds of each tick
+tickTime=2000
+# The number of ticks that the initial
+# synchronization phase can take
+initLimit=10
+# The number of ticks that can pass between
+# sending a request and getting an acknowledgement
+syncLimit=5
+# the directory where the snapshot is stored.
+# do not use /tmp for storage, /tmp here is just
+# example sakes.
+#dataDir=/tmp/zookeeper
+dataDir=/hadoop/zookeeper
+# the port at which the clients will connect
+clientPort=2181
+# the maximum number of client connections.
+# increase this if you need to handle more clients
+#maxClientCnxns=60
+#
+# Be sure to read the maintenance section of the
+# administrator guide before turning on autopurge.
+#
+# http://zookeeper.apache.org/doc/current/zookeeperAdmin.html#sc_maintenance
+#
+# The number of snapshots to retain in dataDir
+#autopurge.snapRetainCount=3
+# Purge task interval in hours
+# Set to "0" to disable auto purge feature
+#autopurge.purgeInterval=1
+server.1=machine2.cscoop.net:2888:3888
+server.2=machine3.cscoop.net:2888:3888
+server.3=machine4.cscoop.net:2888:3888
+
+
+
+
+[root@machine3 bin]# cat /etc/hosts
+# Your system has configured 'manage_etc_hosts' as True.
+# As a result, if you wish for changes to this file to persist
+# then you will need to either
+# a.) make changes to the master file in /etc/cloud/templates/hosts.redhat.tmpl
+# b.) change or remove the value of 'manage_etc_hosts' in
+#     /etc/cloud/cloud.cfg or cloud-config from user-data
+#
+# The following lines are desirable for IPv4 capable hosts
+#127.0.0.1 machine3.cscoop.net machine3
+127.0.0.1 localhost.localdomain localhost
+127.0.0.1 localhost4.localdomain4 localhost4
+10.122.0.2 machine4.cscoop.net machine4
+10.122.0.4 machine2.cscoop.net machine2
+10.122.0.3 machine3.cscoop.net machine3
+
+
+# The following lines are desirable for IPv6 capable hosts
+::1 machine3.cscoop.net machine3
+::1 localhost.localdomain localhost
+::1 localhost6.localdomain6 localhost6
+
+[root@machine3 bin]#
+
+[root@machine4 version-2]# history
+    1  clear
+    2  sudo yum install java java-devel
+    3  java -version
+    4  clear
+    5  sudo useradd kafka -m
+    6  groupadd zookeeper
+    7  mkdir /app/zookeeper
+    8  mkdir -p /app/zookeeper
+    9  useradd -g zookeeper -d /app/zookeeper -s /sbin/nologin zookeeper
+   10  cd /app/zookeeper/
+   11  wget https://archive.apache.org/dist/zookeeper/zookeeper-3.5.5/apache-zookeeper-3.5.5-bin.tar.gz
+   12  yum install wget
+   13  wget https://archive.apache.org/dist/zookeeper/zookeeper-3.5.5/apache-zookeeper-3.5.5-bin.tar.gz
+   14  tar -xzf apache-zookeeper-3.5.5-bin.tar.gz
+   15  cd apache-zookeeper-3.5.5-bin
+   16  cp conf/zoo_sample.cfg conf/zoo.cfg
+   17  vi conf/zoo.cfg
+   18  vi /usr/lib/systemd/system/zookeeper.service
+   19  systemctl daemon-reload
+   20  systemctl enable zookeeper.service
+   21  systemctl start zookeeper.service
+   22  systemctl status zookeeper.service
+   23  cd logs
+   24  ll
+   25  cd bin/
+   26  ./zkServer.sh start
+   27  ll
+   28  cd ..
+   29  ll
+   30  cd logs/
+   31  ll
+   32  less zookeeper-root-server-machine4.cscoop.net.out
+   33  cd /hadoop/zookeeper/
+   34  ll
+   35  vi myid
+   36  cd
+   37  cd /app/zookeeper/apache-zookeeper-3.5.5-bin
+   38  cd bin/
+   39  ./zkServer.sh start
+   40  cd ../logs/zookeeper-root-server-machine4.cscoop.net.out
+   41  less ../logs/zookeeper-root-server-machine4.cscoop.net.out
+   42  systemctl status zookeeper.service
+   43  clear
+   44  systemctl status zookeeper.service
+   45  systemctl stop zookeeper.service
+   46  systemctl start zookeeper.service
+   47  cd ..
+   48  less logs/zookeeper-root-server-machine4.cscoop.net.out
+   49  ping 10.122.0.2
+   50  ifconfig
+   51  systemctl status zookeeper.service
+   52  clear
+   53  systemctl status zookeeper.service
+   54  clear
+   55  systemctl status zookeeper.service
+   56  systemctl status zookeeper.service -l
+   57  chown -R zookeeper:zookeeper /hadoop/zookeeper/
+   58  systemctl status zookeeper.service -l
+   59  clear
+   60  history
+   61  systemctl status zookeeper.service
+   62  clear
+   63  cd
+   64  systemctl status zookeeper.service
+   65  clear
+   66  yum install tree
+   67  yum install -y nc
+   68  echo srvr | nc localhost 2181
+   69  service firewalld status
+   70  ping 10.122.0.3
+   71  idocnfig
+   72  ifconfig
+   73  ping 10.122.0.2
+   74  telnet 10.122.0.2 2181
+   75  yum install -y telnet
+   76  telnet 10.122.0.2 2181
+   77  cd /app/zookeeper/apache-zookeeper-3.5.5-bin/bin/
+   78  ./zkCli.sh
+   79  cat /etc/hosts
+   80  clear
+   81  vi /etc/hosts
+   82  ifconfig
+   83  vi /etc/hosts
+   84  clear
+   85  systemctl restart zookeeper.service
+   86  systemctl status zookeeper.service
+   87  cd ../logs/
+   88  ls
+   89  less zookeeper-root-server-machine4.cscoop.net.out
+   90  ll
+   91  cd ..
+   92  ll
+   93  cd ..
+   94  ll
+   95  cd ..
+   96  ll
+   97  chown -R zookeeper:zookeeper zookeeper
+   98  clear
+   99  systemctl restart zookeeper.service
+  100  systemctl status zookeeper.service
+  101  cd zookeeper/
+  102  cd apache-zookeeper-3.5.5-bin
+  103  ll
+  104  cd bin/
+  105  ll
+  106  ./zkCli.sh
+  107  cd ..
+  108  vi conf/zoo.cfg
+  109  telnet machine2.cscoop.net:2181
+  110  telnet machine2.cscoop.net 2181
+  111  telnet machine3.cscoop.net 2181
+  112  telnet machine3.cscoop.net 2888
+  113  vi conf/zoo.cfg
+  114  cat conf/zoo.cfg
+  115  systemctl restart zookeeper.service
+  116  systemctl status zookeeper.service
+  117  netstat -tupln | grep 2181
+  118  vi /etc/hosts
+  119  vi /hadoop/zookeeper/myid
+  120  systemctl restart zookeeper.service
+  121  systemctl status zookeeper.service
+  122  cd bin/
+  123  ./zkCli.sh
+  124  vi /etc/hosts
+  125  systemctl restart zookeeper.service
+  126  systemctl status zookeeper.service
+  127  ./zkCli.sh
+  128  clear
+  129  echo srvr | nc localhost 2181
+  130  clear
+  131  cd ..
+  132  cd conf/
+  133  cat zoo.cfg
+  134  cat /hadoop/zookeeper/myid
+  135  cd /hadoop/zookeeper/
+  136  clear
+  137  ll
+  138  ll version-2/
+  139  ls
+  140  cd version-2/
+  141  less log.100000001
+  142  du -sh *
+  143  history
+
+
+
+[root@machine4 version-2]# cat /usr/lib/systemd/system/zookeeper.service
+[Unit]
+Description=Zookeeper Service
+
+[Service]
+Type=simple
+WorkingDirectory=/app/zookeeper/apache-zookeeper-3.5.5-bin
+PIDFile=/hadoop/zookeeper/zookeeper_server.pid
+SyslogIdentifier=zookeeper
+User=zookeeper
+Group=zookeeper
+ExecStart=/app/zookeeper/apache-zookeeper-3.5.5-bin/bin/zkServer.sh start
+ExecStop=/app/zookeeper/apache-zookeeper-3.5.5-bin/bin/zkServer.sh stop
+Restart=always
+TimeoutSec=20
+SuccessExitStatus=130 143
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+
+
+[root@machine3 bin]# echo srvr | nc localhost 2181
+Zookeeper version: 3.5.5-390fe37ea45dee01bf87dc1c042b5e3dcce88653, built on 05/03/2019 12:07 GMT
+Latency min/avg/max: 0/1/12
+Received: 28
+Sent: 27
+Connections: 1
+Outstanding: 0
+Zxid: 0x100000008
+Mode: leader
+Node count: 7
+Proposal sizes last/min/max: 32/32/109
+[root@machine3 bin]#
+
+
+
+
+Verify:
+
+[zk: localhost:2181(CONNECTED) 0] ls /
+[FirstZnode, zookeeper]
+
+
+[zk: localhost:2181(CONNECTED) 1] ls /FirstZnode
+[Child1]
+
+
+[zk: localhost:2181(CONNECTED) 2] stat /FirstZnode
+cZxid = 0x100000004
+ctime = Wed May 31 05:40:30 UTC 2023
+mZxid = 0x100000004
+mtime = Wed May 31 05:40:30 UTC 2023
+pZxid = 0x100000005
+cversion = 1
+dataVersion = 0
+aclVersion = 0
+ephemeralOwner = 0x0
+dataLength = 26
+numChildren = 1
+[zk: localhost:2181(CONNECTED) 3]
+
+
+
+
+
+WatchedEvent state:SyncConnected type:None path:null
+[zk: localhost:2181(CONNECTING) 0] ls /
+[FirstZnode, zookeeper]
+[zk: localhost:2181(CONNECTED) 1] ls /FirstZnode
+[Child1]
+[zk: localhost:2181(CONNECTED) 2]
+
+
+[root@machine4 apache-zookeeper-3.5.5-bin]# echo srvr | nc localhost 2181
+Zookeeper version: 3.5.5-390fe37ea45dee01bf87dc1c042b5e3dcce88653, built on 05/03/2019 12:07 GMT
+Latency min/avg/max: 0/1/10
+Received: 35
+Sent: 34
+Connections: 1
+Outstanding: 0
+Zxid: 0x10000000c
+Mode: follower
+Node count: 7
+
+
+
+POC1: Take backup of Zookeeper and start new zookeeper
+
+Data Directory to use:
+/opt/zookeeper
+
+App directory:
+/app/zookeeper2
+
+
+Create data and app directory:
+
+Download zip
+
+
+chown data and app directory to zookeeper.
+
+
+Create zoo.cfg from old zookeeper
+
+Create service file
+/usr/lib/systemd/system/zookeeper2.service
+
+
+Stop Zookeeper.
+
+
+Take backup:
+
+
+[root@machine2 ~]# mkdir /tmp/bkp
+[root@machine2 ~]# tar -czf /tmp/bkp/zkhomebackup.tar.gz /hadoop/zookeeper/*
+tar: Removing leading `/' from member names
+[root@machine2 ~]# ll /tmp/bkp/zkhomebackup.tar.gz
+-rw-r--r--. 1 root root 65976 May 31 11:17 /tmp/bkp/zkhomebackup.tar.gz
+[root@machine2 ~]#
+
+tar -C /tmp/zookeeper -xzf /home/kafka/zookeeper-backup.tar.gz --strip-components 2
+
+
+tar -C /opt/zookeeper -xzf /tmp/bkp/zkhomebackup.tar.gz --strip-components 2
+
+
+
+
+
+==========>
+
+Verify:
+
+[root@machine4 logs]# echo srvr | nc localhost 2181
+Zookeeper version: 3.5.5-390fe37ea45dee01bf87dc1c042b5e3dcce88653, built on 05/03/2019 12:07 GMT
+Latency min/avg/max: 0/0/0
+Received: 1
+Sent: 0
+Connections: 1
+Outstanding: 0
+Zxid: 0x400000000
+Mode: leader
+Node count: 7
+Proposal sizes last/min/max: -1/-1/-1
+
+
+
+[zk: localhost:2181(CONNECTED) 0] ls /
+[FirstZnode, zookeeper]
+[zk: localhost:2181(CONNECTED) 1] ls /FirstZnode
+[Child1]
+[zk: localhost:2181(CONNECTED) 2] stat /FirstZnode
+cZxid = 0x100000004
+ctime = Wed May 31 05:40:30 UTC 2023
+mZxid = 0x100000004
+mtime = Wed May 31 05:40:30 UTC 2023
+pZxid = 0x100000005
+cversion = 1
+dataVersion = 0
+aclVersion = 0
+ephemeralOwner = 0x0
+dataLength = 26
+numChildren = 1
+[zk: localhost:2181(CONNECTED) 3]
+
+
+
+create -s /AfterMigrationZnode “migration-data”
+
+
+========================================================================
+
+Create a kafka User:
+
+sudo useradd kafka -m
+sudo passwd kafka
+sudo usermod -aG wheel kafka
+
+
+
+mkdir -p /hadoop/kafka-logs
+
+su -l kafka
+
+
+Download kafka
+
+
+mkdir ~/Downloads
+curl "https://archive.apache.org/dist/kafka/2.5.0/kafka_2.12-2.5.0.tgz" -o ~/Downloads/kafka.tgz
+
+mkdir ~/kafka && cd ~/kafka
+
+tar -xvzf ~/Downloads/kafka.tgz --strip 1
+
+vi ~/kafka/config/server.properties
+
+
+
+
+mkdir -p /hadoop/kafka-logs
+
+
+chown -R kafka:kafka /hadoop/kafka-logs
+
+
+
+Configure kafka
+
+
+
+Create systemd file
+
+sudo vi /etc/systemd/system/kafka.service
+
+[Unit]
+Requires=zookeeper.service
+After=zookeeper.service
+
+[Service]
+Type=simple
+User=kafka
+ExecStart=/bin/sh -c '/home/kafka/kafka/bin/kafka-server-start.sh /home/kafka/kafka/config/server.properties > /home/kafka/kafka/kafka.log 2>&1'
+ExecStop=/home/kafka/kafka/bin/kafka-server-stop.sh
+Restart=on-abnormal
+
+[Install]
+WantedBy=multi-user.target
+
+
+Add at the end
+delete.topic.enable = true
+
+to vi ~/kafka/config/server.properties
+
+
+
+
+Testing The Installation.
+sudo systemctl status kafka
+sudo systemctl start kafka
+
+sudo systemctl enable kafka
+
+
+
+~/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic TestTopic
+
+
+echo "Hello, after 3 kafka,how is my world" | ~/kafka/bin/kafka-console-producer.sh --broker-list localhost:9092 --topic TutorialTopic > /dev/null
+
+
+~/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic TutorialTopic --from-beginning
+
+
+
+[root@machine2 kafka-logs]# su -l kafka
+Last login: Wed May 31 12:16:23 UTC 2023 on pts/0
+
+[kafka@machine2 ~]$ ~/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic TestTopic
+Created topic TestTopic.
+
+
+[kafka@machine2 ~]$ echo "Hello, JP" | ~/kafka/bin/kafka-console-producer.sh --broker-list localhost:9092 --topic TutorialTopic > /dev/null
+
+echo "Hello, JP" | ~/kafka/bin/kafka-console-producer.sh --broker-list machine2.cscoop.net:9092 --topic TutorialTopic > /dev/null
+
+
+ machine2.cscoop.net
+
+[2023-05-31 12:23:07,525] WARN [Producer clientId=console-producer] Error while fetching metadata with correlation id 1 : {TutorialTopic=LEADER_NOT_AVAILABLE} (org.apache.kafka.clients.NetworkClient)
+[kafka@machine2 ~]$ ~/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic TutorialTopic --from-beginning
+Hello, World
+
+^CProcessed a total of 1 messages
+[kafka@machine2 ~]$ ~/kafka/bin/kafka-topics.sh --list --zookeeper localhost:2181
+TestTopic
+TutorialTopic
+__consumer_offsets
+[kafka@machine2 ~]$
+
+
+
+echo "Hello, after 3 kafka,how is my world" | ~/kafka/bin/kafka-console-producer.sh --broker-list machine3.cscoop.net:9092 --topic TutorialTopic > /dev/null
+
+~/kafka/bin/kafka-console-consumer.sh --bootstrap-server machine3.cscoop.net:9092 --topic TutorialTopic --from-beginning
+
+
+
+~/kafka/bin/kafka-topics.sh --create --zookeeper machine2.cscoop.net:2181 --replication-factor 3 --partitions 3 --topic TestTopic3
+
+
+
+[kafka@machine3 ~]$ ~/kafka/bin/kafka-topics.sh --list --zookeeper machine2.cscoop.net:2181,machine3.cscoop.net:2181,machine4.cscoop.net:2181
+[2023-06-01 00:54:39,863] WARN Client session timed out, have not heard from server in 10011ms for sessionid 0x0 (org.apache.zookeeper.ClientCnxn)
+[2023-06-01 00:54:49,977] WARN Client session timed out, have not heard from server in 10011ms for sessionid 0x0 (org.apache.zookeeper.ClientCnxn)
+TestTopic
+TestTopic2
+TestTopic3
+TestTopic4
+TutorialTopic
+__consumer_offsets
+
+
+
+[root@machine3 hadoop]# du -sh *
+44K kafka-logs
+304K    zookeeper
+
+[root@machine2 hadoop]# du -sh *
+268K    kafka-logs
+272K    zookeeper
+
+
+[root@machine4 hadoop]# du -sh *
+36K kafka-logs
+332K    zookeeper
+
+
+
+Now lets , 
+
+/hadoop/kafka-logs2
+
+
+sudo vi /etc/systemd/system/kafka2.service
+
+[Unit]
+Requires=zookeeper.service
+After=zookeeper.service
+
+[Service]
+Type=simple
+User=kafka
+ExecStart=/bin/sh -c '/home/kafka/kafka2/bin/kafka-server-start.sh /home/kafka/kafka2/config/server.properties > /home/kafka/kafka2/kafka.log 2>&1'
+ExecStop=/home/kafka/kafka2/bin/kafka-server-stop.sh
+Restart=on-abnormal
+
+[Install]
+WantedBy=multi-user.target
+
+
+tar -C /hadoop/kafka-logs2 -xzf /tmp/bkp/kafkadatadir.tar.gz --strip-components 2
+
+
+
+===
+====ZK and kafka migration:
+
+1. Using digital ocean blog--
+
+Backup Zoookeeper state.
+ You need to read the value of this field to determine the directory to back up.
+zookeeper.properties
+dataDir
+
+create a compressed archive file of its contents.
+
+
+Backup Kafka,
+Kafka stores topics, messages, and internal files in the directory that the log.dirs field specifies in the ~/kafka/config/server.properties
+
+stop the Kafka service 
+
+create a compressed archive file of the directory’s contents
+
+
+
