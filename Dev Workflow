@@ -1,0 +1,43 @@
+To start work on the next feature, such as Orphan Content Detection (feature-orphan-detection), follow these steps:
+
+Step 1: Pull the Latest Changes
+
+Ensure your local main branch is up-to-date with the remote repository:
+
+git checkout main
+git pull origin main
+
+Step 2: Create a New Feature Branch
+
+Create a new branch for the next feature:
+
+git checkout -b feature-orphan-detection
+
+This branch is now your working branch for the Orphan Content Detection feature.
+
+Step 3: Implement the Feature
+
+	•	Make the necessary changes for the feature in your code.
+	•	Stage and commit changes as you progress:
+
+git add .
+git commit -m "Initial implementation of orphan content detection"
+
+Step 4: Push the Feature Branch
+
+Push the branch to GitHub for backup or collaboration:
+
+git push origin feature-orphan-detection
+
+Repeat Workflow for All Features
+
+	1.	Create a branch for each feature (e.g., feature-pagination, feature-settings-page).
+	2.	Work on the branch, commit, and push.
+	3.	Merge the branch into main once the feature is complete.
+
+Branch Naming Tip
+
+Use descriptive branch names to make your workflow clearer. Examples:
+	•	feature-export-links
+	•	fix-broken-link-detection
+	•	feature-ai-integration
