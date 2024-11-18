@@ -2,7 +2,7 @@ Make changes....
 
 git commit -m "export csv and suggest link for orphan content detection"
 git push origin <existing branch>feature-orphan-detection
-Merge -pull request---
+Merge -pull request---Delete if required.
 git checkout main
 git pull origin main
 
