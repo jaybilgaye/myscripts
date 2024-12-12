@@ -1,0 +1,25 @@
+from bs4 import BeautifulSoup
+import json
+
+# Load the HTML content
+with open("hbase_regions.html", "r") as file:
+    html_content = file.read()
+
+# Parse the HTML
+soup = BeautifulSoup(html_content, "html.parser")
+table = soup.find("table")  # Adjust the selector if needed
+
+# Extract table data
+data = []
+rows = table.find_all("tr")
+headers = [header.text.strip() for header in rows[0].find_all("th")]
+
+for row in rows[1:]:
+    cols = [col.text.strip() for col in row.find_all("td")]
+    data.append(dict(zip(headers, cols)))
+
+# Save as JSON
+with open("table.json", "w") as outfile:
+    json.dump(data, outfile, indent=4)
+
+print("Table data saved to table.json")
