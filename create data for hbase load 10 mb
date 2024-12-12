@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# File to generate
+OUTPUT_FILE="large_data.csv"
+
+# Size limit in bytes (10 MB)
+SIZE_LIMIT=$((10 * 1024 * 1024))
+
+# Start with a header
+echo "ID,Name,City,Age" > "$OUTPUT_FILE"
+
+# ID counter
+ID=1
+
+# Define arrays for randomization
+NAMES=("Sham" "Guru" "John" "Rock" "Mike" "Dave")
+CITIES=("Bengaluru" "New Delhi" "NY" "DC" "Mumbai" "London")
+
+# Function to select a random element from an array
+get_random() {
+    local arr=("$@")
+    echo "${arr[RANDOM % ${#arr[@]}]}"
+}
+
+# Function to get file size
+get_file_size() {
+    stat -f%z "$1" # Use -f%z for file size on macOS
+}
+
+# Generate data until file size reaches 10 MB
+while [ "$(get_file_size "$OUTPUT_FILE")" -lt "$SIZE_LIMIT" ]; do
+    # Randomize data
+    NAME=$(get_random "${NAMES[@]}")
+    CITY=$(get_random "${CITIES[@]}")
+    AGE=$((RANDOM % 20 + 20)) # Random age between 20 and 40
+
+    # Append to the file
+    echo "$ID,$NAME,$CITY,$AGE" >> "$OUTPUT_FILE"
+
+    # Increment ID
+    ID=$((ID + 1))
+done
+
+echo "CSV file generated: $OUTPUT_FILE"
