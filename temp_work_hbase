@@ -1,0 +1,143 @@
+✅ Bash Script: Get List of HBase Tables from HBase UI
+#!/bin/bash
+
+# Replace with your HBase Master Host
+HBASE_MASTER_URL="http://<hbase-master-host>:16010/tablesDetailed.jsp"
+
+# Fetch the page
+html=$(curl -s "$HBASE_MASTER_URL")
+
+# Extract table names using grep and sed
+echo "List of HBase Tables:"
+echo "$html" | grep -oP '(?<=<a href="table.jsp\?name=)[^"]+' | sort | uniq
+
+
+
+
+Bash Script: List HBase Tables with Storefile Size
+
+
+#!/bin/bash
+
+# Replace with your actual HBase Master hostname or IP
+HBASE_MASTER_URL="http://<hbase-master-host>:16010/tablesDetailed.jsp"
+
+# Fetch HTML from HBase Master UI
+html=$(curl -s "$HBASE_MASTER_URL")
+
+# Parse and print table name along with Storefile Size
+echo "HBase Tables and Storefile Sizes:"
+echo "----------------------------------"
+echo "$html" | grep -A1 'href="table.jsp?name=' | \
+grep -E 'href|[0-9]+\.[0-9]+[ ]?(MB|GB)' | \
+sed 's/.*name=//;s/">.*//;s/<.*>//' | \
+awk 'NR%2{printf "%-40s", $0} NR%2==0{print $0}'
+
+
+HBase Tables and Storefile Sizes:
+----------------------------------
+default:users                          500.32 MB
+default:logs                           3.20 GB
+namespace1:events                      1.15 GB
+
+====
+
+Absolutely, you can build a custom Prometheus exporter in Bash using the Textfile Collector method provided by the Prometheus Node Exporter.
+
+While Bash cannot serve HTTP (like Python), it can generate .prom files that Prometheus scrapes via Node Exporter. This is widely used and works great for periodic metrics like HBase table sizes.
+
+⸻
+
+✅ Here’s the Plan (Bash-Based Exporter)
+
+🧩 Components:
+	•	A Bash script that gets HBase table names + storefile sizes
+	•	Outputs Prometheus-compatible metrics to a .prom file
+	•	The file is placed in the Node Exporter textfile_collector directory
+
+⸻
+
+📜 Step-by-Step Bash Script
+
+#!/bin/bash
+
+# CONFIG: Set your HBase Master Web UI
+HBASE_URL="http://<hbase-master-host>:16010/tablesDetailed.jsp"
+
+# CONFIG: Path to Node Exporter's textfile collector directory
+OUTPUT_FILE="/var/lib/node_exporter/textfile_collector/hbase_table_sizes.prom"
+
+# Temporary file
+TMP_FILE=$(mktemp)
+
+# Get HTML content
+html=$(curl -s "$HBASE_URL")
+
+# Extract table names and storefile sizes
+echo "# HELP hbase_table_storefile_size_bytes Storefile size of HBase tables" > "$TMP_FILE"
+echo "# TYPE hbase_table_storefile_size_bytes gauge" >> "$TMP_FILE"
+
+echo "$html" | grep -A1 'href="table.jsp?name=' | \
+grep -E 'href|[0-9]+\.[0-9]+[ ]?(MB|GB)' | \
+sed 's/.*name=//;s/">.*//;s/<.*>//' | \
+awk '
+NR % 2 == 1 { table = $0 }
+NR % 2 == 0 {
+  size = $0
+  gsub(/MB/, "", size)
+  gsub(/GB/, "", size)
+  gsub(/ /, "", size)
+  if ($0 ~ /GB/) { bytes = size * 1024 * 1024 * 1024 }
+  else { bytes = size * 1024 * 1024 }
+  printf("hbase_table_storefile_size_bytes{table=\"%s\"} %.0f\n", table, bytes)
+}' >> "$TMP_FILE"
+
+# Replace the old metrics file
+mv "$TMP_FILE" "$OUTPUT_FILE"
+
+
+
+⸻
+
+🕐 Schedule It Periodically
+
+Use cron to run the script every hour or daily:
+
+crontab -e
+
+Example (every day at midnight):
+
+0 0 * * * /opt/scripts/hbase_exporter.sh
+
+
+
+⸻
+
+📊 In Prometheus Config
+
+Make sure Node Exporter is running with --collector.textfile.directory enabled.
+
+Example config:
+
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+
+Prometheus will automatically read the .prom files from /var/lib/node_exporter/textfile_collector.
+
+⸻
+
+✅ Result: Grafana-ready metrics!
+
+You can now use PromQL like:
+
+hbase_table_storefile_size_bytes
+
+and visualize table growth, filter by namespace, alert on large tables, etc.
+
+⸻
+
+Would you like help converting this into a portable .deb or .rpm or putting it into a Docker container with Prometheus + Grafana preconfigured?
+
+
+
