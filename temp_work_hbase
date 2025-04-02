@@ -141,3 +141,18 @@ Would you like help converting this into a portable .deb or .rpm or putting it i
 
 
 
+# HELP hbase_table_info Presence of HBase tables (1 = exists)
+# TYPE hbase_table_info gauge
+# HELP hbase_table_storefile_size_bytes Storefile size in bytes of HBase tables
+# TYPE hbase_table_storefile_size_bytes gauge
+
+hbase_table_info{table="default:user_data"} 1
+hbase_table_storefile_size_bytes{table="default:user_data"} 524288000
+
+hbase_table_info{table="default:orders"} 1
+hbase_table_storefile_size_bytes{table="default:orders"} 1073741824
+
+hbase_table_info{table="analytics:event_logs"} 1
+hbase_table_storefile_size_bytes{table="analytics:event_logs"} 2147483648
+
+
