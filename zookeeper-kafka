@@ -395,7 +395,87 @@ Editing kafka-server-start.sh	❌ Low	❌ No	🚫 No
 Using /etc/sysconfig/kafka	⚠️ Medium (only works with RPM-based services that source it)	❌ Often ignored	⚠️ OK sometimes
 
 
+OR
 
+
+Excellent! Let’s cover how you can configure Kafka log directories and GC logs via kafka-env.sh, which is another safe and upgrade-friendly method — provided your system is using kafka-run-class.sh and it sources kafka-env.sh (which it typically does in Apache distributions).
+
+⸻
+
+✅ Objective:
+
+Set Kafka logs (server.log) and GC logs to go to /var/log/kafka, using kafka-env.sh.
+
+⸻
+
+📁 File to Edit:
+
+sudo vi /opt/kafka/bin/kafka-env.sh
+
+If it doesn’t exist, create it. Kafka’s kafka-run-class.sh will source this file if present.
+
+⸻
+
+✅ Example Configuration for kafka-env.sh:
+
+# Log directory for Kafka server logs
+export KAFKA_LOG4J_OPTS="-Dkafka.logs.dir=/var/log/kafka"
+
+# GC log configuration (Java 9+ format)
+export KAFKA_JVM_PERFORMANCE_OPTS="-XX:+UseG1GC -Xlog:gc:/var/log/kafka/gc.log:time,uptime,level,tags:filecount=10,filesize=100M"
+
+# Optional: Set heap memory size
+export KAFKA_HEAP_OPTS="-Xms2G -Xmx2G"
+
+These environment variables will be picked up automatically when starting Kafka via kafka-server-start.sh because that script uses kafka-run-class.sh, which in turn sources kafka-env.sh.
+
+⸻
+
+✅ Ensure the Directory Exists:
+
+sudo mkdir -p /var/log/kafka
+sudo chown kafka:kafka /var/log/kafka
+
+
+
+⸻
+
+🔁 Restart Kafka:
+
+If you’re using a systemd service:
+
+sudo systemctl restart kafka
+
+If you’re starting it manually:
+
+/opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/server.properties
+
+
+
+⸻
+
+✅ Verify:
+
+ls -l /var/log/kafka/server.log
+ls -l /var/log/kafka/gc.log
+
+And:
+
+ps aux | grep kafka
+
+You should see the -Dkafka.logs.dir=/var/log/kafka and -Xlog:gc=... flags in the process.
+
+⸻
+
+💡 Why kafka-env.sh is a safe approach:
+	•	It’s designed specifically to customize environment variables.
+	•	It avoids direct editing of Kafka binaries or scripts.
+	•	It’s upgrade-resistant — most updates don’t touch this file.
+	•	It works across platforms where systemd may not be used.
+
+⸻
+
+Would you like me to provide a script to install Kafka and auto-apply this log setup with kafka-env.sh?
 ⸻
 
 Let me know if you want to bake this setup into an install script or Ansible playbook — happy to help!
