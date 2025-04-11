@@ -1,0 +1,343 @@
+
+
+To verify that your Apache ZooKeeper installation is functioning correctly, you can perform the following tests:
+
+1. Check ZooKeeper Server Status
+
+Use the zkServer.sh script to determine the status of your ZooKeeper server: ￼
+
+sudo /usr/share/zookeeper/bin/zkServer.sh status
+
+This command will output the mode of the server, such as leader, follower, or standalone, indicating its current role in the ensemble.  ￼
+
+2. Connect Using the ZooKeeper Command-Line Interface (CLI)
+
+The zkCli.sh script allows you to interact with your ZooKeeper server: ￼
+
+sudo /usr/share/zookeeper/bin/zkCli.sh -server localhost:2181
+
+This command connects you to the ZooKeeper server running on localhost at port 2181. Once connected, you can execute various commands to interact with the ZooKeeper service.
+
+3. Create and Manage znodes
+
+Within the ZooKeeper CLI, you can create, retrieve, and manage znodes (ZooKeeper data nodes): ￼
+	•	Create a znode:
+
+create /my_node "Hello, ZooKeeper!"
+
+This command creates a new znode at path /my_node with the data "Hello, ZooKeeper!".  ￼
+
+	•	Retrieve data from a znode:
+
+get /my_node
+
+This retrieves and displays the data stored in /my_node.
+
+	•	Set data for a znode:
+
+set /my_node "Updated data"
+
+This updates the data of /my_node to "Updated data".
+
+	•	List children of a znode:
+
+ls /
+
+This lists the children znodes of the root path /. ￼
+
+	•	Delete a znode:
+
+delete /my_node
+
+This deletes the znode at /my_node. ￼
+
+4. Check ZooKeeper Server Mode Using Four-Letter Commands
+
+ZooKeeper provides a set of four-letter commands to query the status of the server: ￼
+	•	Determine the server’s mode:
+
+echo srvr | nc localhost 2181
+
+This command returns information about the server, including whether it’s operating as a leader or follower.  ￼
+
+	•	Check if the server is running:
+
+echo ruok | nc localhost 2181
+
+A healthy server responds with imok.  ￼
+
+By performing these tests, you can confirm that your ZooKeeper installation is operational and capable of handling client requests.
+
+
+
+
+==
+To ensure that ZooKeeper logs are directed to /var/log/zookeeper, you’ll need to configure the logging settings appropriately. Here’s how you can achieve this:
+
+⸻
+
+🛠️ Steps to Configure ZooKeeper Logging Directory
+	1.	Locate the log4j.properties File:
+	•	This file is typically found in the conf directory of your ZooKeeper installation. ￼
+	•	For example: /etc/zookeeper/conf/log4j.properties
+	2.	Edit the log4j.properties File:
+	•	Open the file with your preferred text editor:
+
+sudo vi /etc/zookeeper/conf/log4j.properties
+
+
+	•	Modify or add the following properties to set the log directory:
+
+zookeeper.log.dir=/var/log/zookeeper
+zookeeper.log.file=zookeeper.log
+
+
+	•	Ensure the appender is configured to use these properties: ￼
+
+log4j.appender.ROLLINGFILE.File=${zookeeper.log.dir}/${zookeeper.log.file}
+
+
+	3.	Create the Log Directory (If It Doesn’t Exist):
+	•	If /var/log/zookeeper doesn’t already exist, create it and set appropriate permissions:
+
+sudo mkdir -p /var/log/zookeeper
+sudo chown zookeeper:zookeeper /var/log/zookeeper
+
+
+	4.	Restart the ZooKeeper Service:
+	•	After making these changes, restart ZooKeeper to apply the new logging configuration: ￼
+
+sudo systemctl restart zookeeper
+
+
+
+⸻
+
+📌 Additional Notes
+	•	Environment Variable Override:
+	•	You can also set the ZOO_LOG_DIR environment variable to specify the log directory: ￼
+
+export ZOO_LOG_DIR=/var/log/zookeeper
+
+
+	•	This can be added to the ZooKeeper startup script or systemd service file to ensure it’s set on startup.
+
+	•	Logging Framework:
+	•	ZooKeeper uses Log4j for logging. Ensure that the Log4j configuration aligns with your desired logging behavior.
+
+⸻
+
+By following these steps, ZooKeeper will write its logs to /var/log/zookeeper, helping you maintain organized and centralized log management.
+
+
+
+Below is an example of a log4j.properties file configured for Apache ZooKeeper to store logs in /var/log/zookeeper:
+
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Set the root logger level and attach appenders to it
+log4j.rootLogger=INFO, ROLLINGFILE, CONSOLE
+
+# Configure the rolling file appender to write logs to /var/log/zookeeper
+log4j.appender.ROLLINGFILE=org.apache.log4j.RollingFileAppender
+log4j.appender.ROLLINGFILE.File=${zookeeper.log.dir}/${zookeeper.log.file}
+log4j.appender.ROLLINGFILE.MaxFileSize=10MB
+log4j.appender.ROLLINGFILE.MaxBackupIndex=10
+log4j.appender.ROLLINGFILE.layout=org.apache.log4j.PatternLayout
+log4j.appender.ROLLINGFILE.layout.ConversionPattern=%d{ISO8601} [%t] %-5p %c{2} (%F:%L) - %m%n
+
+# Configure the console appender for debugging purpose
+log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
+log4j.appender.CONSOLE.Target=System.out
+log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout
+log4j.appender.CONSOLE.layout.ConversionPattern=%d{ISO8601} [%t] %-5p %c{2} (%F:%L) - %m%n
+
+# Define log directory and file name
+zookeeper.log.dir=/var/log/zookeeper
+zookeeper.log.file=zookeeper.log
+
+# Set logger levels for ZooKeeper internals
+log4j.logger.org.apache.zookeeper=INFO
+log4j.logger.org.apache.zookeeper.server=INFO
+
+
+
+⸻
+
+Explanation
+	1.	Root Logger and Appenders:
+	•	The log4j.rootLogger sets the base logging level (INFO) and assigns two appenders: one for rolling file output and one for console output.
+	2.	Rolling File Appender:
+	•	The ROLLINGFILE appender writes logs to the file specified by the combination of ${zookeeper.log.dir} and ${zookeeper.log.file}.
+	•	The settings such as MaxFileSize and MaxBackupIndex control how the logs are rotated.
+	3.	Console Appender:
+	•	The CONSOLE appender outputs logs to the standard output, which is helpful during development or troubleshooting.
+	4.	Log Directory and File Configuration:
+	•	By setting zookeeper.log.dir to /var/log/zookeeper and zookeeper.log.file to zookeeper.log, you ensure that all ZooKeeper logs end up in /var/log/zookeeper/zookeeper.log.
+	5.	Logger Levels for ZooKeeper Components:
+	•	Log levels are explicitly set for the main ZooKeeper classes (org.apache.zookeeper and org.apache.zookeeper.server) to ensure logs are captured as expected.
+
+⸻
+
+References
+	•	Apache ZooKeeper GitHub Repository – Logging Configuration – Provides context on default logging practices and configurations for ZooKeeper.
+	•	Apache ZooKeeper Documentation – Details on configuring and managing ZooKeeper, including logging setup.
+
+This file can be placed in the ZooKeeper configuration directory (typically found at /etc/zookeeper/conf/ on RHEL/CentOS systems) to ensure logs are directed to the specified directory.
+
+
+=======
+
+
+Here’s a step-by-step installation guide for Apache Kafka 3.6.0 and Zookeeper 3.8.4 on 3 separate machines each, assuming you’re using RHEL/CentOS-based systems and your repos (Kafka & Zookeeper) are available locally via Satellite.
+
+⸻
+
+🔧 Prerequisites (on all machines)
+	•	Java 8 or 11 installed.
+	•	DNS resolution between all nodes or update /etc/hosts.
+	•	Static IPs.
+	•	Firewall rules opened for Zookeeper (2181) and Kafka (9092).
+	•	Unique hostnames for each node.
+
+⸻
+
+🧭 Machines Map (Example)
+
+Role	Hostname	IP Address
+ZooKeeper1	zk1.example.com	192.168.1.101
+ZooKeeper2	zk2.example.com	192.168.1.102
+ZooKeeper3	zk3.example.com	192.168.1.103
+Kafka1	kafka1.example.com	192.168.1.201
+Kafka2	kafka2.example.com	192.168.1.202
+Kafka3	kafka3.example.com	192.168.1.203
+
+
+
+⸻
+
+🐘 Step 1: Install Zookeeper (3.8.4) on zk1, zk2, zk3
+
+🔹 Install Zookeeper
+
+sudo yum install -y zookeeper zookeeper-server
+
+🔹 Configure Zookeeper
+
+Edit /etc/zookeeper/zoo.cfg:
+
+tickTime=2000
+initLimit=10
+syncLimit=5
+dataDir=/var/lib/zookeeper
+clientPort=2181
+server.1=zk1.example.com:2888:3888
+server.2=zk2.example.com:2888:3888
+server.3=zk3.example.com:2888:3888
+
+🔹 Set myid
+
+echo "1" > /var/lib/zookeeper/myid  # On zk1
+echo "2" > /var/lib/zookeeper/myid  # On zk2
+echo "3" > /var/lib/zookeeper/myid  # On zk3
+
+🔹 Start Zookeeper
+
+sudo systemctl enable zookeeper
+sudo systemctl start zookeeper
+
+
+
+⸻
+
+🦄 Step 2: Install Kafka (3.6.0) on kafka1, kafka2, kafka3
+
+🔹 Install Kafka
+
+sudo yum install -y kafka kafka-server
+
+🔹 Configure Kafka (Example for kafka1)
+
+Edit /etc/kafka/server.properties:
+
+broker.id=1
+log.dirs=/var/lib/kafka-logs
+zookeeper.connect=zk1.example.com:2181,zk2.example.com:2181,zk3.example.com:2181
+listeners=PLAINTEXT://kafka1.example.com:9092
+advertised.listeners=PLAINTEXT://kafka1.example.com:9092
+num.network.threads=3
+num.io.threads=8
+socket.send.buffer.bytes=102400
+socket.receive.buffer.bytes=102400
+socket.request.max.bytes=104857600
+log.retention.hours=168
+log.segment.bytes=1073741824
+log.retention.check.interval.ms=300000
+zookeeper.connection.timeout.ms=6000
+group.initial.rebalance.delay.ms=0
+
+Update broker.id and advertised.listeners uniquely per Kafka node.
+
+🔹 Start Kafka
+
+sudo systemctl enable kafka
+sudo systemctl start kafka
+
+
+
+⸻
+
+✅ Step 3: Verify Setup
+
+🔹 Check Zookeeper
+
+echo ruok | nc localhost 2181
+# Should respond with: imok
+
+🔹 Check Kafka
+
+kafka-topics.sh --bootstrap-server kafka1.example.com:9092 --list
+
+
+
+⸻
+
+🔁 Step 4: Kafka Cluster Configuration (Optional)
+
+After starting all nodes:
+	1.	Create topics:
+
+kafka-topics.sh --create --topic test --bootstrap-server kafka1.example.com:9092 --replication-factor 3 --partitions 3
+
+
+	2.	Produce messages:
+
+kafka-console-producer.sh --broker-list kafka1.example.com:9092 --topic test
+
+
+	3.	Consume messages:
+
+kafka-console-consumer.sh --bootstrap-server kafka1.example.com:9092 --topic test --from-beginning
+
+
+
+⸻
+
+Would you like a systemd health check script or cluster monitoring setup next (Prometheus/Grafana or Kafka Manager)?
+
+
