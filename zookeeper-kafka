@@ -480,3 +480,66 @@ Would you like me to provide a script to install Kafka and auto-apply this log s
 
 Let me know if you want to bake this setup into an install script or Ansible playbook — happy to help!
 
+====
+Thanks for checking — and yes, you’re absolutely right:
+
+🔍 In Apache Kafka 3.0+ (and especially 3.6.0), the script kafka-run-class.sh no longer refers to kafka-env.sh by default. This file was used in older Confluent Platform versions or in custom setups.
+
+⸻
+
+🚫 So, what does this mean?
+	•	If you’re using Apache Kafka 3.6.0 (standard tarball or package install), then:
+	•	There’s no built-in mechanism to source kafka-env.sh.
+	•	Environment variables like KAFKA_LOG4J_OPTS, KAFKA_HEAP_OPTS, or KAFKA_JVM_PERFORMANCE_OPTS must be injected externally — either via:
+	•	systemd environment injection (/usr/bin/env)
+	•	wrapper script
+	•	shell export before manual startup
+
+⸻
+
+✅ Recommended: Use systemd + /usr/bin/env OR a Wrapper Script
+
+If you’re using systemd (as in most servers), go with this proven and maintainable method:
+
+✅ systemd override with embedded env:
+
+[Service]
+ExecStart=
+ExecStart=/usr/bin/env \
+  KAFKA_LOG4J_OPTS=-Dkafka.logs.dir=/var/log/kafka \
+  KAFKA_JVM_PERFORMANCE_OPTS="-Xlog:gc:/var/log/kafka/gc.log:time,uptime,level,tags:filecount=10,filesize=100M" \
+  /opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/server.properties
+
+If you’re starting manually (e.g., in dev/test):
+
+✅ Bash wrapper script (manual alternative):
+
+Create /usr/local/bin/kafka-start.sh:
+
+#!/bin/bash
+export KAFKA_LOG4J_OPTS="-Dkafka.logs.dir=/var/log/kafka"
+export KAFKA_JVM_PERFORMANCE_OPTS="-Xlog:gc:/var/log/kafka/gc.log"
+exec /opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/server.properties
+
+Then run:
+
+chmod +x /usr/local/bin/kafka-start.sh
+sudo /usr/local/bin/kafka-start.sh
+
+
+
+⸻
+
+📝 Summary
+
+Method	Supported in Kafka 3.6.0	Recommended
+kafka-env.sh	❌ Not sourced by default	🚫 No
+systemd + ExecStart=env	✅ Yes	✅ Yes
+Manual shell exports	✅ Yes	✅ For dev
+Editing kafka-server-start.sh	✅ Works	⚠️ Not ideal (risk on upgrades)
+
+
+
+⸻
+
+Let me know if you’d like help writing an Ansible playbook or startup script with the right log and GC settings!
