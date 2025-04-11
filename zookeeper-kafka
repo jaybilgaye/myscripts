@@ -341,3 +341,62 @@ kafka-console-consumer.sh --bootstrap-server kafka1.example.com:9092 --topic tes
 Would you like a systemd health check script or cluster monitoring setup next (Prometheus/Grafana or Kafka Manager)?
 
 
+Great question!
+
+🔐 TL;DR: The safest, most maintainable way to configure Kafka log directories without editing core Kafka scripts like kafka-server-start.sh is to use a custom systemd unit override that injects the required environment variables via /usr/bin/env.
+
+⸻
+
+✅ Recommended (Safe + Clean) Approach: systemd override with /usr/bin/env
+
+Why it’s better:
+	•	Doesn’t modify Kafka binaries (survives upgrades).
+	•	No need to touch Kafka’s internal scripts.
+	•	Works reliably across RHEL/CentOS and Debian systems.
+	•	Easy to document and replicate in automation tools (like Ansible or Terraform).
+
+🔧 Example override
+
+sudo systemctl edit kafka
+
+Paste:
+
+[Service]
+ExecStart=
+ExecStart=/usr/bin/env \
+  KAFKA_LOG4J_OPTS=-Dkafka.logs.dir=/var/log/kafka \
+  KAFKA_HEAP_OPTS=-Xms2G -Xmx2G \
+  KAFKA_JVM_PERFORMANCE_OPTS=-XX:+UseG1GC -Xlog:gc:/var/log/kafka/gc.log:time,uptime,level,tags:filecount=10,filesize=100M \
+  /opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/server.properties
+
+Then:
+
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl restart kafka
+
+
+
+⸻
+
+⚠️ Why editing kafka-server-start.sh is riskier:
+	•	Your changes may be overwritten by package upgrades.
+	•	Harder to maintain across multiple servers.
+	•	Scripts might break if upstream changes are introduced in newer Kafka versions.
+	•	Difficult to manage in large/automated deployments.
+
+⸻
+
+📌 Summary
+
+Method	Safety	Upgrade-Friendly	Best for Production
+Systemd override with env	✅ High	✅ Yes	✅ Yes
+Editing kafka-server-start.sh	❌ Low	❌ No	🚫 No
+Using /etc/sysconfig/kafka	⚠️ Medium (only works with RPM-based services that source it)	❌ Often ignored	⚠️ OK sometimes
+
+
+
+⸻
+
+Let me know if you want to bake this setup into an install script or Ansible playbook — happy to help!
+
