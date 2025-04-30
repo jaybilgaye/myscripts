@@ -1,0 +1,583 @@
+
+⸻
+
+🔥 Core kubectl Commands for Admins
+
+🔵 Cluster Info
+
+kubectl cluster-info
+kubectl get componentstatus       # check etcd, scheduler, controller health
+kubectl get nodes                 # list all nodes
+kubectl describe node <node-name> # detailed info about a node
+
+
+
+⸻
+
+🔵 Pods and Workloads
+
+kubectl get pods -A               # list all pods in all namespaces
+kubectl get pods --all-namespaces -o wide  # with node and IP details
+kubectl describe pod <pod-name>   # detailed pod information
+kubectl logs <pod-name>           # view pod logs
+kubectl logs <pod-name> -c <container-name>  # if multiple containers in pod
+
+
+
+⸻
+
+🔵 Deployments
+
+kubectl get deployments           # list deployments
+kubectl describe deployment <deployment-name>
+kubectl rollout status deployment/<deployment-name> # check rollout
+kubectl rollout undo deployment/<deployment-name>   # rollback
+
+
+
+⸻
+
+🔵 Services
+
+kubectl get svc                   # list services
+kubectl describe svc <service-name>
+
+
+
+⸻
+
+🔵 Draining / Cordon / Uncordon Nodes (very important for upgrades!)
+
+kubectl cordon <node-name>         # block new pods from scheduling
+kubectl drain <node-name> --ignore-daemonsets --delete-emptydir-data --force  # move pods off node
+kubectl uncordon <node-name>       # allow scheduling again
+
+
+
+⸻
+
+🔵 Namespaces
+
+kubectl get namespaces
+kubectl get pods -n <namespace>
+kubectl config set-context --current --namespace=<namespace>  # switch default namespace
+
+
+
+⸻
+
+🔵 Create Basic Objects Quickly
+
+kubectl create deployment nginx --image=nginx
+kubectl expose deployment nginx --port=80 --target-port=80 --type=NodePort
+kubectl delete deployment nginx
+kubectl delete svc nginx
+
+
+
+⸻
+
+🔵 Port Forward
+
+kubectl port-forward svc/<service-name> 8080:80
+
+Access service on localhost:8080 forwarding to service port 80.
+
+⸻
+
+🔵 Debug / Exec into Pods
+
+kubectl exec -it <pod-name> -- /bin/bash
+# or if bash not available:
+kubectl exec -it <pod-name> -- /bin/sh
+
+(You are inside the running container!)
+
+⸻
+
+🔵 Resource Usage
+
+If metrics server installed:
+
+kubectl top nodes
+kubectl top pods -A
+
+(Shows CPU/Memory usage.)
+
+⸻
+
+🔵 Events
+
+kubectl get events --sort-by='.metadata.creationTimestamp'  # latest first
+
+(Helpful for troubleshooting pod failures.)
+
+⸻
+
+🔥 Useful K8s Admin One-Liners
+
+Purpose	Command
+Check pending pods	kubectl get pods --field-selector=status.phase=Pending -A
+Find pods stuck terminating	`kubectl get pods -A
+Quickly list all NodePort services	`kubectl get svc -A
+Show pods on a particular node	kubectl get pods --all-namespaces --field-selector spec.nodeName=<node-name>
+Show all PVCs and PVs	kubectl get pvc,pv -A
+
+
+
+⸻
+
+🛠 Very Practical Quick Scenarios
+
+Scenario	Command
+See all nodes and their status	kubectl get nodes -o wide
+Move pods off a node for maintenance	kubectl drain <node> --ignore-daemonsets --force --delete-emptydir-data
+View logs of a crashing pod	kubectl logs <pod>
+Exec into a pod for debugging	kubectl exec -it <pod> -- /bin/sh
+Check if cluster is healthy	kubectl get componentstatus
+Delete a stuck pod	kubectl delete pod <pod-name> --grace-period=0 --force
+
+
+
+⸻
+
+🚀 Bonus: Tools Admins Love
+
+Tool	Why Useful
+kubectx, kubens	Quickly switch contexts and namespaces
+k9s	TUI (Terminal UI) dashboard for cluster management
+stern	Tail logs of multiple pods at once
+kubectl tree (plugin)	See owner relationships (e.g., Deployment → ReplicaSet → Pod)
+
+
+
+⸻
+
+🔥 Super Important Tips for Admins
+
+✅ Always check resource quotas before launching heavy workloads.
+✅ Always check PodDisruptionBudgets (PDB) before draining nodes.
+✅ Always check etcd health when rebooting/upgrading master nodes.
+✅ Be careful with forced deletes (--force) — only if absolutely necessary.
+✅ Label nodes and workloads properly (env=prod, tier=backend) for easier management.
+
+⸻
+
+🚀 In Short:
+
+✅ You still remember Kubernetes —
+this is just a small refresh boost 🚀.
+
+You can now:
+	•	Operate
+	•	Debug
+	•	Upgrade
+	•	Maintain
+	•	Optimize clusters professionally again.
+
+⸻
+
+Would you also like a one-page printable cheatsheet (in PNG/PDF format) for all this?
+I can give you a neat one if you want to keep it handy on your desktop! 📄🚀
+
+(Just say: yes, send it!)
+
+
+
+Excellent!
+Let’s complete your toolkit like a true production Kubernetes admin.
+
+⸻
+
+Post-Master-Reboot Quick Verification Script
+
+This script will:
+	•	Check if the node is Ready
+	•	Check if etcd, scheduler, and controller-manager are Healthy
+	•	Log everything for record-keeping
+
+⸻
+
+verify-master-health.sh
+
+#!/bin/bash
+
+set -e
+
+NODE_NAME=$(hostname)
+LOG_FILE="/tmp/verify-master-${NODE_NAME}-$(date +%Y%m%d-%H%M%S).log"
+
+function log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') : $*" | tee -a "$LOG_FILE"
+}
+
+log "============================================="
+log " Post-Master Node Health Verification: $NODE_NAME"
+log "============================================="
+
+# 1. Wait until node is Ready
+READY=false
+for i in {1..10}; do
+    STATUS=$(kubectl get nodes "$NODE_NAME" --no-headers | awk '{print $2}')
+    if [[ "$STATUS" == "Ready" ]]; then
+        READY=true
+        log "Node $NODE_NAME is Ready."
+        break
+    else
+        log "Node not Ready yet. Attempt $i/10. Waiting 10 seconds..."
+        sleep 10
+    fi
+done
+
+if [ "$READY" = false ]; then
+    log "ERROR: Node $NODE_NAME did not become Ready after 100 seconds. Aborting verification."
+    exit 1
+fi
+
+# 2. Check Kubernetes Component Status
+log "Checking Kubernetes critical components..."
+kubectl get componentstatus | tee -a "$LOG_FILE"
+
+log "Health Check Completed."
+
+
+
+⸻
+
+What this script does
+
+Step	Purpose
+Waits for node to become Ready	Up to 100s
+Checks etcd, controller-manager, scheduler health	
+Logs all results to /tmp/verify-master-<node>-<timestamp>.log	
+
+
+
+⸻
+
+How to Use
+
+After rebooting a master node:
+	1.	SSH into the master node.
+	2.	Save the script:
+
+nano verify-master-health.sh
+
+
+	3.	Paste the script above.
+	4.	Make it executable:
+
+chmod +x verify-master-health.sh
+
+
+	5.	Run it:
+
+./verify-master-health.sh
+
+
+
+Done!
+
+⸻
+
+Example Output
+
+2025-04-28 15:02:10 :  Node ip-10-0-0-1 is Ready.
+2025-04-28 15:02:11 :  Checking Kubernetes critical components...
+NAME                 STATUS    MESSAGE             ERROR
+scheduler            Healthy   ok
+controller-manager   Healthy   ok
+etcd-0               Healthy   {"health":"true"}
+2025-04-28 15:02:12 :  Health Check Completed.
+
+
+
+⸻
+
+Quick Recap for Master Node Upgrade
+
+Step	Script	Purpose
+Pre-reboot	upgrade-node-production.sh	Cordon, Drain, Reboot
+Post-reboot	uncordon-after-upgrade.sh	Wait Ready, Uncordon
+Verify health	verify-master-health.sh	Ensure etcd, controller-manager, scheduler Healthy
+
+
+
+⸻
+
+Final Visual Summary:
+
+[upgrade-node-production.sh] --> [Machine Reboot] --> [uncordon-after-upgrade.sh] --> [verify-master-health.sh] --> [Next Node]
+
+Smooth like butter!
+
+⸻
+
+
+Perfect!
+Let’s complete the whole upgrade flow professionally.
+
+Here’s a tiny clean script you can run after reboot, to:
+	•	Check if the node is Ready
+	•	Uncordon it automatically
+	•	Confirm it is schedulable
+	•	Log everything nicely
+
+⸻
+
+Here’s the post-reboot script:
+
+uncordon-after-upgrade.sh
+
+#!/bin/bash
+
+set -e
+
+NODE_NAME=$(hostname)
+LOG_FILE="/tmp/uncordon-${NODE_NAME}-$(date +%Y%m%d-%H%M%S).log"
+
+function log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') : $*" | tee -a "$LOG_FILE"
+}
+
+log "============================================="
+log " Post-reboot node uncordon process: $NODE_NAME"
+log "============================================="
+
+# Step 1: Wait until the node becomes Ready
+READY=false
+for i in {1..10}; do
+    STATUS=$(kubectl get nodes "$NODE_NAME" --no-headers | awk '{print $2}')
+    if [[ "$STATUS" == "Ready" ]]; then
+        READY=true
+        log "Node $NODE_NAME is Ready."
+        break
+    else
+        log "Node not Ready yet. Attempt $i/10. Waiting 10 seconds..."
+        sleep 10
+    fi
+done
+
+if [ "$READY" = false ]; then
+    log "ERROR: Node $NODE_NAME did not become Ready after 100 seconds. Aborting."
+    exit 1
+fi
+
+# Step 2: Uncordon the node
+log "Uncordoning node $NODE_NAME..."
+kubectl uncordon "$NODE_NAME" | tee -a "$LOG_FILE"
+
+# Step 3: Confirm status
+log "Final node status:"
+kubectl get nodes "$NODE_NAME" | tee -a "$LOG_FILE"
+
+log "Node $NODE_NAME successfully uncordoned and ready for new pods."
+
+
+
+⸻
+
+What this script does:
+
+Step	Purpose
+Waits for the node to become Ready after reboot	Up to 100 seconds
+If ready, runs kubectl uncordon	Automatically
+Logs all actions	For audit
+Displays final node status	
+
+
+
+⸻
+
+How to use it
+
+After the node reboots:
+	1.	SSH into the machine.
+	2.	Save this script:
+
+nano uncordon-after-upgrade.sh
+
+
+	3.	Make it executable:
+
+chmod +x uncordon-after-upgrade.sh
+
+
+	4.	Run it:
+
+./uncordon-after-upgrade.sh
+
+
+
+Done!
+
+No need to manually guess when the node is ready.
+No need to manually uncordon.
+Smooth and safe.
+
+⸻
+
+Full upgrade flow now looks like:
+
+Step	Script	Action
+Pre-reboot	upgrade-node-production.sh	Cordon → Drain → Reboot
+Post-reboot	uncordon-after-upgrade.sh	Wait → Uncordon
+
+
+
+⸻
+
+Final Pro Tip:
+
+After you finish upgrading all nodes:
+run this to verify cluster health:
+
+kubectl get nodes
+kubectl get pods --all-namespaces
+kubectl get componentstatus
+
+If all green = Upgrade completed professionally!
+
+⸻
+
+Would you also like me to give you a super bonus:
+	•	a Master List/Checklist that you can print and follow per node?
+(for clean upgrading each machine 1 by 1)
+
+====
+
+
+Excellent!
+Let’s make a Production-Grade version of the script now:
+	•	Auto-retries if drain fails (e.g., due to PodDisruptionBudget)
+	•	Better logging (timestamps)
+	•	Clear separation of Pre-reboot and Post-reboot parts.
+
+⸻
+
+Here’s the full improved script:
+
+upgrade-node-production.sh
+
+#!/bin/bash
+
+set -e  # Exit immediately if a command fails
+
+NODE_NAME=$(hostname)
+LOG_FILE="/tmp/upgrade-${NODE_NAME}-$(date +%Y%m%d-%H%M%S).log"
+
+function log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') : $*" | tee -a "$LOG_FILE"
+}
+
+log "============================================="
+log " Starting node upgrade process: $NODE_NAME"
+log "============================================="
+
+# Step 1: Cordon the node
+log "Cordoning node $NODE_NAME ..."
+kubectl cordon "$NODE_NAME" | tee -a "$LOG_FILE"
+
+# Step 2: Drain the node with retries
+DRAIN_RETRIES=5
+for i in $(seq 1 $DRAIN_RETRIES); do
+    log "Attempt $i to drain node $NODE_NAME ..."
+    if kubectl drain "$NODE_NAME" --ignore-daemonsets --delete-emptydir-data --force | tee -a "$LOG_FILE"; then
+        log "Node $NODE_NAME drained successfully."
+        break
+    else
+        log "Drain attempt $i failed. Retrying in 10 seconds..."
+        sleep 10
+    fi
+
+    if [ "$i" -eq "$DRAIN_RETRIES" ]; then
+        log "ERROR: Unable to drain node after $DRAIN_RETRIES attempts. Aborting!"
+        exit 1
+    fi
+done
+
+# Step 3: Wait 30 seconds
+log "Waiting 30 seconds to let pods reschedule on other nodes..."
+sleep 30
+
+# Step 4: Show pods still on this node (final verification)
+log "Verifying pods still on $NODE_NAME ..."
+kubectl get pods --all-namespaces --field-selector spec.nodeName="$NODE_NAME" | tee -a "$LOG_FILE"
+
+# Step 5: Confirm before rebooting
+read -p "Do you want to reboot the node $NODE_NAME now? (yes/no): " confirm
+if [ "$confirm" = "yes" ]; then
+    log "Rebooting node $NODE_NAME..."
+    sudo reboot
+else
+    log "Reboot cancelled. You can manually reboot later."
+    exit 0
+fi
+
+# Step 6: After reboot - UNCORDON manually!
+# Reminder: After reboot, you must run:
+#   kubectl uncordon $(hostname)
+
+
+
+⸻
+
+Summary of Improvements:
+
+Feature	Old Script	New Script
+Logging with timestamp	No	Yes
+Retry draining if fails	No	Yes (5 retries)
+Output log file saved	No	Yes (/tmp/upgrade--.log)
+Auto exit if too many failures	No	Yes
+Safe confirmation before reboot	Yes	Yes
+
+
+
+⸻
+
+Post-Reboot Step
+
+After the machine comes back up,
+YOU MUST manually run:
+
+kubectl uncordon $(hostname)
+
+This makes the node schedulable again.
+
+⸻
+
+How to use
+	1.	Copy script to machine:
+
+nano upgrade-node-production.sh
+
+
+	2.	Paste the script.
+	3.	Make it executable:
+
+chmod +x upgrade-node-production.sh
+
+
+	4.	Run it:
+
+./upgrade-node-production.sh
+
+
+
+⸻
+
+Important
+	•	If the script fails to drain the node even after retries, it will NOT reboot — it will abort.
+	•	All actions are logged in /tmp/upgrade-<node-name>-<timestamp>.log for auditing.
+
+⸻
+
+Would you also like
+	•	A tiny script for Post-reboot uncordon with auto-check?
+	•	(It’ll verify node Ready + uncordon automatically.)
+
+Example:
+
+./uncordon-after-upgrade.sh
+
+
