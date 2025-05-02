@@ -581,3 +581,104 @@ Example:
 ./uncordon-after-upgrade.sh
 
 
+Perfect — you want to add a safety mechanism to your upgrade-node-production.sh script so that:
+
+⚠️ The script will only proceed if no other node in the cluster is currently cordoned (SchedulingDisabled)
+This ensures you don’t accidentally drain multiple nodes at once.
+
+⸻
+
+✅ Updated upgrade-node-production.sh with safety check
+
+Here’s the modified version of the script you asked for:
+
+#!/bin/bash
+
+set -e
+
+NODE_NAME=$(hostname)
+LOG_FILE="/tmp/upgrade-${NODE_NAME}-$(date +%Y%m%d-%H%M%S).log"
+
+function log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') : $*" | tee -a "$LOG_FILE"
+}
+
+log "============================================="
+log " Starting node upgrade process: $NODE_NAME"
+log "============================================="
+
+# 🔐 SAFETY CHECK: Allow only if no other node is cordoned
+CORDONED_NODES=$(kubectl get nodes --no-headers | grep SchedulingDisabled | grep -v "$NODE_NAME" | awk '{print $1}')
+
+if [[ ! -z "$CORDONED_NODES" ]]; then
+    log "❌ Aborting: Other node(s) already cordoned: $CORDONED_NODES"
+    log "➡️  Please uncordon those nodes before proceeding with this upgrade."
+    exit 1
+fi
+
+# 1. Cordon this node
+log "✅ Cordoning node $NODE_NAME ..."
+kubectl cordon "$NODE_NAME" | tee -a "$LOG_FILE"
+
+# 2. Drain the node with retries
+DRAIN_RETRIES=5
+for i in $(seq 1 $DRAIN_RETRIES); do
+    log "Attempt $i to drain node $NODE_NAME ..."
+    if kubectl drain "$NODE_NAME" --ignore-daemonsets --delete-emptydir-data --force | tee -a "$LOG_FILE"; then
+        log "✅ Node $NODE_NAME drained successfully."
+        break
+    else
+        log "⚠️ Drain attempt $i failed. Retrying in 10 seconds..."
+        sleep 10
+    fi
+
+    if [ "$i" -eq "$DRAIN_RETRIES" ]; then
+        log "❌ ERROR: Unable to drain node after $DRAIN_RETRIES attempts. Aborting!"
+        exit 1
+    fi
+done
+
+# 3. Wait 30 seconds
+log "⏳ Waiting 30 seconds to let pods reschedule..."
+sleep 30
+
+# 4. Show pods still on this node (for verification)
+log "📦 Verifying pods still on $NODE_NAME ..."
+kubectl get pods --all-namespaces --field-selector spec.nodeName="$NODE_NAME" | tee -a "$LOG_FILE"
+
+# 5. Confirm before rebooting
+read -p "Do you want to reboot node $NODE_NAME now? (yes/no): " confirm
+if [ "$confirm" = "yes" ]; then
+    log "🔄 Rebooting node $NODE_NAME..."
+    sudo reboot
+else
+    log "🚫 Reboot cancelled by user. You can manually reboot later."
+    exit 0
+fi
+
+
+
+⸻
+
+🔍 What Changed:
+
+Feature	Description
+✅ Cordoned-node check	Script now checks if any other node (excluding itself) is in SchedulingDisabled state
+❌ If any are found	Script aborts with a clear message — to prevent draining multiple nodes together
+
+
+
+⸻
+
+✅ Output example (if another node is already cordoned):
+
+2025-04-29 12:00:01 : ❌ Aborting: Other node(s) already cordoned: worker-2
+2025-04-29 12:00:01 : ➡️  Please uncordon those nodes before proceeding with this upgrade.
+
+
+
+⸻
+
+Would you like a matching post-reboot script that also checks if any other node is still cordoned before uncordoning this one (to prevent parallel upgrades accidentally resuming)?
+
+Just say yes and I’ll modify that script too.
