@@ -682,3 +682,9 @@ Feature	Description
 Would you like a matching post-reboot script that also checks if any other node is still cordoned before uncordoning this one (to prevent parallel upgrades accidentally resuming)?
 
 Just say yes and I’ll modify that script too.
+
+
+kubectl get componentstatus | grep -q "Unhealthy" && {
+  log "❌ Cluster health check failed (components unhealthy). Aborting upgrade."
+  exit 1
+}
