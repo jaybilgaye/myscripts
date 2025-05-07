@@ -28,6 +28,123 @@ sort -hr "$TMP_FILE" | head -n 10
 
 
 
+Here’s a shell script that will:
+	1.	SSH into each host listed in a hosts.txt file.
+	2.	Check the /var/log/hadoop/yarn/log/ directory.
+	3.	List all application_* directories.
+	4.	Sort them by size in descending order.
+	5.	Print the top N (you can configure this) heaviest applications consuming disk space.
+
+⸻
+
+✅ check_yarn_log_usage.sh
+
+#!/bin/bash
+
+# Path to the list of hosts
+HOSTS_FILE="hosts.txt"
+
+# Directory to check
+LOG_DIR="/var/log/hadoop/yarn/log"
+
+# Number of top entries to show per host
+TOP_N=5
+
+# Loop through each host
+while read -r HOST; do
+    echo "----- Checking on $HOST -----"
+    
+    ssh "$HOST" "du -sh $LOG_DIR/application_* 2>/dev/null | sort -hr | head -n $TOP_N"
+    
+    echo ""
+done < "$HOSTS_FILE"
+
+
+
+⸻
+
+✅ Sample hosts.txt
+
+node1.example.com
+node2.example.com
+node3.example.com
+
+
+
+⸻
+
+✅ How to Run
+
+chmod +x check_yarn_log_usage.sh
+./check_yarn_log_usage.sh
+
+
+
+⸻
+
+✅ Sample Output
+
+----- Checking on node1.example.com -----
+28G    /var/log/hadoop/yarn/log/application_1723223232323_0076
+2.9G   /var/log/hadoop/yarn/log/application_1723223232323_0087
+2G     /var/log/hadoop/yarn/log/application_1723223232323_0072
+
+----- Checking on node2.example.com -----
+3.5G   /var/log/hadoop/yarn/log/application_1723223232323_0045
+1.2G   /var/log/hadoop/yarn/log/application_1723223232323_0067
+
+Would you like this script to also email a report or store the output in a file with timestamps?
+
+
+To find the single application consuming the most space across all hosts, you can modify the script to:
+	1.	Collect output from each host.
+	2.	Combine and sort all application usage entries.
+	3.	Print the one with the highest usage.
+
+⸻
+
+✅ Modified Script: top_yarn_app.sh
+
+#!/bin/bash
+
+HOSTS_FILE="hosts.txt"
+LOG_DIR="/var/log/hadoop/yarn/log"
+TMP_FILE="yarn_usage.tmp"
+
+> "$TMP_FILE"  # clear temporary file
+
+while read -r HOST; do
+    echo "Checking $HOST..."
+    
+    ssh "$HOST" "du -sh $LOG_DIR/application_* 2>/dev/null" | \
+    awk -v host="$HOST" '{print $1, host, $2}' >> "$TMP_FILE"
+    
+done < "$HOSTS_FILE"
+
+echo ""
+echo "Top application by disk usage across all nodes:"
+sort -hr "$TMP_FILE" | head -n 1
+
+
+
+⸻
+
+✅ Example Output
+
+28G node3.example.com /var/log/hadoop/yarn/log/application_1723223232323_0076
+
+
+
+⸻
+
+✅ Explanation
+	•	du -sh: Summarizes directory size.
+	•	awk: Adds hostname to help identify source.
+	•	sort -hr: Sorts human-readable sizes in descending order.
+	•	head -n 1: Picks the topmost entry.
+
+Would you also like to automatically delete apps older than N days or exceeding a size threshold?
+
 ⸻
 
 ✅ Sample Output
