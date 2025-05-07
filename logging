@@ -1,0 +1,44 @@
+Great — to find the Top 10 disk-consuming YARN applications across all hosts, here’s the updated script:
+
+⸻
+
+✅ Script: top_10_yarn_apps.sh
+
+#!/bin/bash
+
+HOSTS_FILE="hosts.txt"
+LOG_DIR="/var/log/hadoop/yarn/log"
+TMP_FILE="yarn_usage.tmp"
+
+# Clear temp file
+> "$TMP_FILE"
+
+# Collect disk usage info from all hosts
+while read -r HOST; do
+    echo "Checking $HOST..."
+    
+    ssh "$HOST" "du -sh $LOG_DIR/application_* 2>/dev/null" | \
+    awk -v host="$HOST" '{print $1, host, $2}' >> "$TMP_FILE"
+    
+done < "$HOSTS_FILE"
+
+echo ""
+echo "Top 10 YARN applications by disk usage across all nodes:"
+sort -hr "$TMP_FILE" | head -n 10
+
+
+
+⸻
+
+✅ Sample Output
+
+28G node2.example.com /var/log/hadoop/yarn/log/application_1723223232323_0076
+12G node1.example.com /var/log/hadoop/yarn/log/application_1723223232323_0053
+10G node3.example.com /var/log/hadoop/yarn/log/application_1723223232323_0080
+...
+
+
+
+⸻
+
+Let me know if you want to export this output to CSV or filter by apps older than X days.
