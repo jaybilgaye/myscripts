@@ -1,0 +1,30 @@
+As of May 2025, Kibana version 8.12.2 is affected by several security vulnerabilities. Below is a summary of these CVEs, including their descriptions, affected components, severity scores, and references:
+
+⸻
+
+🔐 CVEs Affecting Kibana 8.12.2
+
+CVE ID	Description	Affected Component	Severity	References
+CVE-2024-37287	Prototype pollution vulnerability in Kibana’s Machine Learning and Alerting connectors, allowing arbitrary code execution.	ML & Alerting Connectors	High	Vumetric
+CVE-2024-37279	View-only users can exploit the run_soon API to continuously trigger alerting rules, potentially leading to denial of service.	Alerting API	Medium	Vumetric
+CVE-2024-23442	Improper input validation in Kibana’s visualization component, leading to potential cross-site scripting (XSS) attacks.	Visualization Component	High	Bitsight
+CVE-2024-23443	Information disclosure vulnerability in Kibana’s dashboard, allowing unauthorized access to sensitive data.	Dashboard	High	Bitsight
+
+Note: These vulnerabilities are directly associated with Kibana 8.12.2 and its components.
+
+⸻
+
+📦 Latest Stable Version
+
+The latest stable release of Kibana is version 9.0.1, released on May 6, 2025. This version includes fixes for the aforementioned vulnerabilities and introduces new features and improvements.
+	•	Download: Kibana 9.0.1
+	•	Release Notes: Kibana 9.0.1 Release Notes
+
+⸻
+
+✅ Recommendations
+	•	Upgrade to Kibana 9.0.1: To address the listed vulnerabilities and benefit from the latest features, it is strongly recommended to upgrade to version 9.0.1.
+	•	Review Security Configurations: Ensure that your Kibana deployment has appropriate security configurations, including proper role definitions and access controls.
+	•	Monitor for Updates: Regularly check for updates and security advisories to keep your deployment secure.
+
+If you need assistance with upgrading or implementing security measures, feel free to ask.
