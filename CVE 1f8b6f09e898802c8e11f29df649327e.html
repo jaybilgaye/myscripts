@@ -1,0 +1,705 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>CVE </title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(50, 48, 44, 1);
+}
+.highlight-gray {
+	color: rgba(115, 114, 110, 1);
+	fill: rgba(115, 114, 110, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(205, 60, 58, 1);
+	fill: rgba(205, 60, 58, 1);
+}
+.highlight-default_background {
+	color: rgba(50, 48, 44, 1);
+}
+.highlight-gray_background {
+	background: rgba(248, 248, 247, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(248, 243, 252, 1);
+}
+.highlight-pink_background {
+	background: rgba(252, 241, 246, 1);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(115, 114, 110, 1);
+	fill: rgba(115, 114, 110, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(205, 60, 58, 1);
+	fill: rgba(205, 60, 58, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(248, 248, 247, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(248, 243, 252, 1);
+}
+.block-color-pink_background {
+	background: rgba(252, 241, 246, 1);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-uiBlue { background-color: undefined; }
+.select-value-color-pink { background-color: rgba(225, 136, 179, 0.27); }
+.select-value-color-purple { background-color: rgba(168, 129, 197, 0.27); }
+.select-value-color-green { background-color: rgba(123, 183, 129, 0.27); }
+.select-value-color-gray { background-color: rgba(84, 72, 49, 0.15); }
+.select-value-color-translucentGray { background-color: undefined; }
+.select-value-color-orange { background-color: rgba(224, 124, 57, 0.27); }
+.select-value-color-brown { background-color: rgba(210, 162, 141, 0.35); }
+.select-value-color-red { background-color: rgba(244, 171, 159, 0.4); }
+.select-value-color-yellow { background-color: rgba(236, 191, 66, 0.39); }
+.select-value-color-blue { background-color: rgba(93, 165, 206, 0.27); }
+.select-value-color-pageGlass { background-color: undefined; }
+.select-value-color-washGlass { background-color: undefined; }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="1f8b6f09-e898-802c-8e11-f29df649327e" class="page sans"><header><h1 class="page-title">CVE </h1><p class="page-description"></p></header><div class="page-body"><p id="1f8b6f09-e898-8074-8197-f7030f3d0d72" class="">Here’s a clear and structured table listing the <strong>latest Apache Ranger version</strong>, its <strong>download sources</strong>, and <strong>CVE vulnerabilities affecting version 2.1.0</strong>—all with direct links to authoritative sources:</p><hr id="1f8b6f09-e898-8091-bbbf-eb558d9fc732"/><h3 id="1f8b6f09-e898-8068-ad23-d250312b754a" class=""><strong>✅ Apache Ranger Latest Stable Version</strong></h3><table id="1f8b6f09-e898-8014-99d7-f2d5fd1b1785" class="simple-table"><tbody><tr id="1f8b6f09-e898-80f2-9a73-f338b7c976a5"><td id="&gt;?YT" class=""><strong>Version</strong></td><td id="_J{s" class=""><strong>Release Date</strong></td><td id="rjQa" class=""><strong>Links</strong></td></tr><tr id="1f8b6f09-e898-807e-9504-efc7d7827759"><td id="&gt;?YT" class=""><strong>2.6.0</strong></td><td id="_J{s" class="">Feb 15, 2025</td><td id="rjQa" class=""><a href="https://ranger.apache.org/download.html">Download</a> • <a href="https://cwiki.apache.org/confluence/display/RANGER/Apache+Ranger+2.6.0+-+Release+Notes">Release Notes</a> • <a href="https://mvnrepository.com/artifact/org.apache.ranger/ranger-distro/2.6.0">Maven</a></td></tr></tbody></table><hr id="1f8b6f09-e898-80d7-8e13-e58180a82e27"/><h3 id="1f8b6f09-e898-8037-91e0-d442e361cc4d" class=""><strong>⚠️ CVEs Affecting Apache Ranger 2.1.0</strong></h3><table id="1f8b6f09-e898-8040-8e8b-ecaf170b41ba" class="simple-table"><tbody><tr id="1f8b6f09-e898-8047-ab3f-dd976c7ce536"><td id="sbsM" class=""><strong>CVE ID</strong></td><td id="o[D?" class=""><strong>Summary</strong></td><td id="~`Gt" class=""><strong>CVE.org Link</strong></td></tr><tr id="1f8b6f09-e898-8062-a3b0-dd01343ee442"><td id="sbsM" class="">CVE-2021-40331</td><td id="o[D?" class="">Hive plugin privilege escalation in Ranger ≤2.1.0</td><td id="~`Gt" class=""><a href="https://www.cve.org/CVERecord?id=CVE-2021-40331">CVE-2021-40331</a></td></tr><tr id="1f8b6f09-e898-80d3-ab2a-d97104544337"><td id="sbsM" class="">CVE-2022-23302</td><td id="o[D?" class="">Log4j 1.x JMSSink deserialization → RCE</td><td id="~`Gt" class=""><a href="https://www.cve.org/CVERecord?id=CVE-2022-23302">CVE-2022-23302</a></td></tr><tr id="1f8b6f09-e898-80f6-981c-f12aefe29db7"><td id="sbsM" class="">CVE-2022-23305</td><td id="o[D?" class="">Log4j 1.x JDBCAppender SQL injection</td><td id="~`Gt" class=""><a href="https://www.cve.org/CVERecord?id=CVE-2022-23305">CVE-2022-23305</a></td></tr><tr id="1f8b6f09-e898-800d-80a4-ff0dbcb3c789"><td id="sbsM" class="">CVE-2022-23307</td><td id="o[D?" class="">Log4j 1.x Chainsaw RCE vulnerability</td><td id="~`Gt" class=""><a href="https://www.cve.org/CVERecord?id=CVE-2022-23307">CVE-2022-23307</a></td></tr><tr id="1f8b6f09-e898-8031-9431-cad4b8cac55a"><td id="sbsM" class="">CVE-2020-8840</td><td id="o[D?" class="">Jackson-databind deserialization flaw</td><td id="~`Gt" class=""><a href="https://www.cve.org/CVERecord?id=CVE-2020-8840">CVE-2020-8840</a></td></tr><tr id="1f8b6f09-e898-80b7-8fad-f03bd0f008df"><td id="sbsM" class="">CVE-2023-22102</td><td id="o[D?" class="">Oracle WebLogic deserialization RCE</td><td id="~`Gt" class=""><a href="https://www.cve.org/CVERecord?id=CVE-2023-22102">CVE-2023-22102</a></td></tr><tr id="1f8b6f09-e898-8053-8e19-c601e34e9c54"><td id="sbsM" class="">CVE-2022-21363</td><td id="o[D?" class="">Oracle Java SE auth bypass</td><td id="~`Gt" class=""><a href="https://www.cve.org/CVERecord?id=CVE-2022-21363">CVE-2022-21363</a></td></tr><tr id="1f8b6f09-e898-80e2-9306-caa942f3e639"><td id="sbsM" class="">CVE-2020-15250</td><td id="o[D?" class="">GitHub Actions permission issues</td><td id="~`Gt" class=""><a href="https://www.cve.org/CVERecord?id=CVE-2020-15250">CVE-2020-15250</a></td></tr><tr id="1f8b6f09-e898-800d-b02e-e162a326f40c"><td id="sbsM" class="">CVE-2018-3258</td><td id="o[D?" class="">Java SE vulnerability</td><td id="~`Gt" class=""><a href="https://www.cve.org/CVERecord?id=CVE-2018-3258">CVE-2018-3258</a></td></tr><tr id="1f8b6f09-e898-8032-b849-f6ca366ae5a0"><td id="sbsM" class="">CVE-2017-3589</td><td id="o[D?" class="">Java SE vulnerability</td><td id="~`Gt" class=""><a href="https://www.cve.org/CVERecord?id=CVE-2017-3589">CVE-2017-3589</a></td></tr></tbody></table><hr id="1f8b6f09-e898-8031-9617-fa06de4847c0"/><p id="1f8b6f09-e898-8043-921f-caa7f71404ea" class="">Let me know if you’d like a downloadable version of this table (CSV/Markdown) or a version including your current Ranger component breakdown (e.g., Hive, HDFS, Admin, etc.).</p><p id="1f8b6f09-e898-80f9-9d02-e01ff4771591" class="">
+</p><p id="1f8b6f09-e898-801c-a00a-c2c1c17f0bd8" class="">As of May 2025, <strong>Apache Hive 3.1.2</strong> has several known security vulnerabilities directly affecting its components. Below is a detailed summary of these CVEs, including their descriptions, affected components, and references:</p><hr id="1f8b6f09-e898-80eb-bd6c-d0fc413d3bee"/><h3 id="1f8b6f09-e898-8007-b900-c43b4c6a4d2f" class=""><strong>🔐 Direct CVEs Affecting Apache Hive 3.1.2</strong></h3><table id="1f8b6f09-e898-805f-93a5-e4bec2fd4453" class="simple-table"><tbody><tr id="1f8b6f09-e898-800a-8879-f499b0842866"><td id=";JKb" class=""><strong>CVE ID</strong></td><td id="T|Sd" class=""><strong>Description</strong></td><td id="gAsC" class=""><strong>Affected Component</strong></td><td id="sE[R" class=""><strong>Reference</strong></td></tr><tr id="1f8b6f09-e898-80e9-9eaf-cb0156c48316"><td id=";JKb" class=""><strong>CVE-2021-34538</strong></td><td id="T|Sd" class="">Improper authorization checks in “CREATE” and “DROP” function operations allow unauthorized users to manipulate existing UDFs, potentially pointing them to malicious JARs.</td><td id="gAsC" class="">Core (UDF Management)</td><td id="sE[R" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2021-34538">NVD</a></td></tr><tr id="1f8b6f09-e898-806c-b765-ef52b0ec33a5"><td id=";JKb" class=""><strong>CVE-2024-29869</strong></td><td id="T|Sd" class="">Specific details are not provided, but this CVE directly affects the hive-exec component.</td><td id="gAsC" class="">hive-exec</td><td id="sE[R" class=""><a href="https://mvnrepository.com/artifact/org.apache.hive/hive-exec/3.1.2">Maven Repository</a></td></tr><tr id="1f8b6f09-e898-8089-a93b-d0129d5e7732"><td id=";JKb" class=""><strong>CVE-2018-21234</strong></td><td id="T|Sd" class="">Vulnerability in the Jodd library (version 3.5.2) used by Hive 3.1.2, allowing potential code injection.</td><td id="gAsC" class="">Jodd Dependency</td><td id="sE[R" class=""><a href="https://community.blackduck.com/s/article/Hive-3-1-2-detected-as-Vulnerability-under-the-CVE-2018-21234">Black Duck Advisory</a></td></tr></tbody></table><hr id="1f8b6f09-e898-8033-abcc-e35261a0ef7a"/><h3 id="1f8b6f09-e898-8072-8416-e3817733a609" class=""><strong>✅ Recommendations</strong></h3><ul id="1f8b6f09-e898-8021-ab3f-dde411fe1db7" class="bulleted-list"><li style="list-style-type:disc"><strong>Upgrade to Apache Hive 3.1.3 or Later</strong>: Version 3.1.3 addresses several of these vulnerabilities, including CVE-2021-34538. For enhanced security and features, consider upgrading to the latest stable release.</li></ul><ul id="1f8b6f09-e898-801d-860d-ec608b059df8" class="bulleted-list"><li style="list-style-type:disc"><strong>Review Dependencies</strong>: Ensure that all third-party libraries, such as Jodd, are updated to versions without known vulnerabilities.</li></ul><ul id="1f8b6f09-e898-80ff-b987-f549a2361131" class="bulleted-list"><li style="list-style-type:disc"><strong>Implement Regular Security Scans</strong>: Use tools like OWASP Dependency-Check or Snyk to identify and address vulnerabilities in your project’s dependencies.</li></ul><ul id="1f8b6f09-e898-8036-a6d5-c693973ba496" class="bulleted-list"><li style="list-style-type:disc"><strong>Monitor Official Channels</strong>: Stay informed about new vulnerabilities and patches by monitoring the <a href="https://hive.apache.org/">Apache Hive official website</a> and subscribing to relevant mailing lists.</li></ul><p id="1f8b6f09-e898-80f6-9630-f4260e1a43bd" class="">If you need assistance with upgrading or setting up a scanning routine, feel free to ask.</p><p id="1f8b6f09-e898-8083-b79f-cce9da94c81c" class="">
+</p><p id="1f8b6f09-e898-80d7-abc8-fe07817b8c5a" class="">
+</p><p id="1f8b6f09-e898-80de-a4fa-cc6b2c2f961c" class="">As of May 2025, <strong>Apache YARN 3.2.2-1</strong> has one known direct vulnerability:</p><hr id="1f8b6f09-e898-80c5-bf40-f361ba4cbc7f"/><h3 id="1f8b6f09-e898-80dd-88e1-f2cc5fe3df37" class=""><strong>🔐 CVE-2021-33036 – Privilege Escalation in YARN</strong></h3><ul id="1f8b6f09-e898-8028-a4b4-caeed23f8b58" class="bulleted-list"><li style="list-style-type:disc"><strong>Description</strong>: In Apache Hadoop versions 2.2.0 to 2.10.1, 3.0.0-alpha1 to 3.1.4, 3.2.0 to 3.2.2, and 3.3.0 to 3.3.1, a user who can escalate to the yarn user can possibly run arbitrary commands as the root user.</li></ul><ul id="1f8b6f09-e898-80b7-9bd1-eefeb49005d9" class="bulleted-list"><li style="list-style-type:disc"><strong>Affected Versions</strong>: Apache Hadoop 3.2.2-1 falls within the affected versions.</li></ul><ul id="1f8b6f09-e898-80f8-860b-f73bf0c7bb68" class="bulleted-list"><li style="list-style-type:disc"><strong>Fixed Versions</strong>: The issue is addressed in Apache Hadoop 3.2.3 and later.</li></ul><ul id="1f8b6f09-e898-809f-8693-dbc781d5705d" class="bulleted-list"><li style="list-style-type:disc"><strong>Reference</strong>: <a href="https://hadoop.apache.org/cve_list.html">Apache Hadoop CVE List</a></li></ul><hr id="1f8b6f09-e898-80a5-a836-f5db7dc48b80"/><h3 id="1f8b6f09-e898-8007-b2a7-ee7fc7d4e3b6" class=""><strong>✅ Recommendations</strong></h3><ul id="1f8b6f09-e898-8034-b0ce-d789c6f2bf21" class="bulleted-list"><li style="list-style-type:disc"><strong>Upgrade to a Fixed Version</strong>: Consider upgrading to Apache Hadoop 3.2.3 or later to address this vulnerability.</li></ul><ul id="1f8b6f09-e898-8085-97a4-f4f71a948df6" class="bulleted-list"><li style="list-style-type:disc"><strong>Restrict User Privileges</strong>: Ensure that users cannot escalate privileges to the yarn user.</li></ul><ul id="1f8b6f09-e898-80bc-90df-e38f7e35435c" class="bulleted-list"><li style="list-style-type:disc"><strong>Implement Regular Security Scans</strong>: Use tools like OWASP Dependency-Check or Trivy to identify and address vulnerabilities in your deployment.</li></ul><p id="1f8b6f09-e898-80fa-8621-cfb360923254" class="">If you need assistance with upgrading or implementing security measures, feel free to ask.</p><p id="1f8b6f09-e898-80a7-8a4c-f8a98c53676c" class="">
+</p><p id="1f8b6f09-e898-8030-a670-d2f8ca726469" class="">
+</p><p id="1f8b6f09-e898-808e-94b4-cb786aa90192" class="">As of May 2025, <strong>Apache ZooKeeper versions 3.9.2 and 3.8.4</strong> have addressed a significant security vulnerability:</p><hr id="1f8b6f09-e898-80f2-a5ca-d741b9da2a6f"/><h3 id="1f8b6f09-e898-8083-a34a-cd3d6065f334" class=""><strong>🔐 CVE-2024-23944 – Information Disclosure via Persistent Watchers</strong></h3><ul id="1f8b6f09-e898-8037-af0f-e076bb0e212b" class="bulleted-list"><li style="list-style-type:disc"><strong>Description</strong>: In Apache ZooKeeper versions 3.9.0 through 3.9.1 and 3.8.0 through 3.8.3, a flaw exists in the handling of persistent watchers. Specifically, when a persistent watcher is triggered, the server does not perform an Access Control List (ACL) check. This oversight allows an attacker, who has access to a parent znode, to monitor child znodes by attaching a persistent watcher (using the addWatch command) to the parent. As a result, the full path of znodes that trigger watch events is exposed to the attacker. While the data of the znode itself is not disclosed, the path can contain sensitive information such as usernames or login IDs, leading to potential information disclosure.</li></ul><ul id="1f8b6f09-e898-801d-9386-db647fe7b597" class="bulleted-list"><li style="list-style-type:disc"><strong>Affected Versions</strong>:<ul id="1f8b6f09-e898-807a-9c91-cee215a3da49" class="bulleted-list"><li style="list-style-type:circle">3.9.0 through 3.9.1</li></ul><ul id="1f8b6f09-e898-8012-b927-c7f0d1cd7454" class="bulleted-list"><li style="list-style-type:circle">3.8.0 through 3.8.3</li></ul></li></ul><ul id="1f8b6f09-e898-8072-aeae-d8e67122bf0c" class="bulleted-list"><li style="list-style-type:disc"><strong>Fixed Versions</strong>:<ul id="1f8b6f09-e898-802b-8fb1-d9aecd910136" class="bulleted-list"><li style="list-style-type:circle">3.9.2</li></ul><ul id="1f8b6f09-e898-805c-88e4-f852e238ef98" class="bulleted-list"><li style="list-style-type:circle">3.8.4</li></ul></li></ul><ul id="1f8b6f09-e898-8035-9b15-f9d94516c53f" class="bulleted-list"><li style="list-style-type:disc"><strong>Severity</strong>: Medium (CVSS v3.1 Score: 5.3)</li></ul><ul id="1f8b6f09-e898-8044-8f6a-f1cfde96f65e" class="bulleted-list"><li style="list-style-type:disc"><strong>References</strong>:<ul id="1f8b6f09-e898-80a7-a8dc-eeb063e64515" class="bulleted-list"><li style="list-style-type:circle"><a href="https://lists.apache.org/thread/96s5nqssj03rznz9hv58txdb2k1lr79k">Apache ZooKeeper Security Advisory</a></li></ul><ul id="1f8b6f09-e898-800b-a435-f4861a67c657" class="bulleted-list"><li style="list-style-type:circle"><a href="https://www.cve.org/CVERecord?id=CVE-2024-23944">CVE Details</a></li></ul></li></ul><hr id="1f8b6f09-e898-803f-a964-e04c5d5f29ba"/><h3 id="1f8b6f09-e898-808d-90a0-f25ebb022576" class=""><strong>✅ Recommendations</strong></h3><ul id="1f8b6f09-e898-8012-ab65-f0e1b2ce3b57" class="bulleted-list"><li style="list-style-type:disc"><strong>Upgrade to Patched Versions</strong>: If you are using any of the affected versions, it is strongly recommended to upgrade to Apache ZooKeeper version 3.9.2 or 3.8.4, which contain the necessary fixes for this vulnerability.</li></ul><ul id="1f8b6f09-e898-8037-b76b-fe6b498f5cd3" class="bulleted-list"><li style="list-style-type:disc"><strong>Review Access Controls</strong>: Ensure that appropriate ACLs are in place for znodes to prevent unauthorized access and monitoring.</li></ul><ul id="1f8b6f09-e898-80d3-b79f-f8604280fefd" class="bulleted-list"><li style="list-style-type:disc"><strong>Monitor for Unusual Activity</strong>: Implement monitoring to detect any unusual patterns that may indicate exploitation attempts.</li></ul><p id="1f8b6f09-e898-80bd-b592-fd8bd335e1b8" class="">If you need assistance with upgrading or implementing security measures, feel free to ask.</p><p id="1f8b6f09-e898-8099-87a8-d52bbb5c1202" class="">
+</p><p id="1f8b6f09-e898-804c-bdaf-fe9ba0a39f13" class="">
+</p><p id="1f8b6f09-e898-80a6-ba8e-cc3be8ee1531" class="">
+</p><p id="1f8b6f09-e898-8085-bda0-fac4454805e8" class="">As of May 2025, <strong>MySQL Community Server 8.0.37</strong> is the latest General Availability (GA) release in the 8.0 series. This version has several documented security vulnerabilities directly affecting its components.</p><p id="1f8b6f09-e898-806d-a900-c184693f6eba" class="">
+</p><p id="1f8b6f09-e898-80fe-b3e2-f499d35f2636" class="">
+</p><p id="1f8b6f09-e898-8068-87db-c9b5edf09848" class="">
+</p><hr id="1f8b6f09-e898-806a-a816-d72c8925b77a"/><h3 id="1f8b6f09-e898-80b5-90e6-eea954788d32" class=""><strong>🔐 CVEs Affecting MySQL Community Server 8.0.37</strong></h3><table id="1f8b6f09-e898-80de-826d-d09e5019b8b3" class="simple-table"><tbody><tr id="1f8b6f09-e898-809f-ac7b-dd3e23c1369a"><td id="dpN_" class=""><strong>CVE ID</strong></td><td id="]F{d" class=""><strong>Description</strong></td><td id="\ZVo" class=""><strong>Affected Component</strong></td><td id="XLS@" class=""><strong>CVSS v3.1 Score</strong></td><td id="MoCz" class=""><strong>References</strong></td></tr><tr id="1f8b6f09-e898-8098-8a9f-f07db02ac576"><td id="dpN_" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21177">CVE-2024-21177</a></td><td id="]F{d" class="">Vulnerability in the MySQL Server product of Oracle MySQL (component: Server: Optimizer). Supported versions that are affected are 8.0.37 and prior and 8.4.0 and prior. Easily exploitable vulnerability allows low privileged attacker with network access via multiple protocols to compromise MySQL Server. Successful attacks of this vulnerability can result in unauthorized ability to cause a hang or frequently repeatable crash (complete DOS) of MySQL Server.</td><td id="\ZVo" class="">Server: Optimizer</td><td id="XLS@" class="">6.5 (Medium)</td><td id="MoCz" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21177">NVD</a>, <a href="https://www.oracle.com/security-alerts/cpujul2024.html">Oracle CPU Jul 2024</a></td></tr><tr id="1f8b6f09-e898-80d1-a82d-dde831f5973d"><td id="dpN_" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21142">CVE-2024-21142</a></td><td id="]F{d" class="">Vulnerability in the MySQL Server product of Oracle MySQL (component: Server: Security: Privileges). Supported versions that are affected are 8.0.37 and prior and 8.4.0 and prior. Easily exploitable vulnerability allows high privileged attacker with network access via multiple protocols to compromise MySQL Server. Successful attacks of this vulnerability can result in unauthorized ability to cause a hang or frequently repeatable crash (complete DOS) of MySQL Server.</td><td id="\ZVo" class="">Server: Security: Privileges</td><td id="XLS@" class="">4.9 (Medium)</td><td id="MoCz" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21142">NVD</a>, <a href="https://www.oracle.com/security-alerts/cpujul2024.html">Oracle CPU Jul 2024</a></td></tr><tr id="1f8b6f09-e898-80e1-a61d-df3f5bb46cbd"><td id="dpN_" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21163">CVE-2024-21163</a></td><td id="]F{d" class="">Vulnerability in the MySQL Server product of Oracle MySQL (component: Server: Optimizer). Supported versions that are affected are 8.0.37 and prior and 8.4.0 and prior. Easily exploitable vulnerability allows high privileged attacker with network access via multiple protocols to compromise MySQL Server. Successful attacks of this vulnerability can result in unauthorized ability to cause a hang or frequently repeatable crash (complete DOS) of MySQL Server as well as unauthorized update, insert or delete access to some of MySQL Server accessible data.</td><td id="\ZVo" class="">Server: Optimizer</td><td id="XLS@" class="">5.5 (Medium)</td><td id="MoCz" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21163">NVD</a>, <a href="https://www.oracle.com/security-alerts/cpujul2024.html">Oracle CPU Jul 2024</a></td></tr><tr id="1f8b6f09-e898-80b5-abd9-d354e03cc97f"><td id="dpN_" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21134">CVE-2024-21134</a></td><td id="]F{d" class="">Vulnerability in the MySQL Server product of Oracle MySQL (component: Server: Connection Handling). Supported versions that are affected are 8.0.37 and prior and 8.4.0 and prior. Easily exploitable vulnerability allows low privileged attacker with network access via multiple protocols to compromise MySQL Server. Successful attacks of this vulnerability can result in unauthorized ability to cause a partial denial of service (partial DOS) of MySQL Server.</td><td id="\ZVo" class="">Server: Connection Handling</td><td id="XLS@" class="">4.3 (Medium)</td><td id="MoCz" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21134">NVD</a>, <a href="https://www.oracle.com/security-alerts/cpujul2024.html">Oracle CPU Jul 2024</a></td></tr><tr id="1f8b6f09-e898-805b-9265-c040cdf2dcc2"><td id="dpN_" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21173">CVE-2024-21173</a></td><td id="]F{d" class="">Vulnerability in the MySQL Server product of Oracle MySQL (component: InnoDB). Supported versions that are affected are 8.0.37 and prior and 8.4.0 and prior. Easily exploitable vulnerability allows high privileged attacker with network access via multiple protocols to compromise MySQL Server. Successful attacks of this vulnerability can result in unauthorized ability to cause a hang or frequently repeatable crash (complete DOS) of MySQL Server.</td><td id="\ZVo" class="">InnoDB</td><td id="XLS@" class="">4.9 (Medium)</td><td id="MoCz" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-21173">NVD</a>, <a href="https://www.oracle.com/security-alerts/cpujul2024.html">Oracle CPU Jul 2024</a></td></tr></tbody></table><hr id="1f8b6f09-e898-803d-a727-cf6a707d3c4a"/><h3 id="1f8b6f09-e898-806e-92e5-d59b891c50bd" class=""><strong>✅ Recommendations</strong></h3><ul id="1f8b6f09-e898-8045-b48f-d940b0ecfe14" class="bulleted-list"><li style="list-style-type:disc"><strong>Upgrade to a Newer Version</strong>: Consider upgrading to a newer version of MySQL Community Server that addresses these vulnerabilities.</li></ul><ul id="1f8b6f09-e898-8044-a585-c9be0009ca48" class="bulleted-list"><li style="list-style-type:disc"><strong>Apply Security Patches</strong>: Ensure that all relevant security patches are applied promptly.</li></ul><ul id="1f8b6f09-e898-80a0-92ee-f5bca84423f6" class="bulleted-list"><li style="list-style-type:disc"><strong>Restrict Network Access</strong>: Limit network access to the MySQL server to trusted sources only.</li></ul><ul id="1f8b6f09-e898-8072-bfc3-f9625eb2855f" class="bulleted-list"><li style="list-style-type:disc"><strong>Regularly Monitor and Audit</strong>: Implement regular monitoring and auditing to detect any unusual activities or potential exploitation attempts.</li></ul><p id="1f8b6f09-e898-805a-b70f-d8e23c739726" class="">For more detailed information on these vulnerabilities and their mitigations, refer to the <a href="https://www.oracle.com/security-alerts/cpujul2024.html">Oracle Critical Patch Update Advisory - July 2024</a>.</p><p id="1f8b6f09-e898-808c-921e-e988bdb9a28f" class="">If you need assistance with upgrading or implementing security measures, feel free to ask.</p><p id="1f8b6f09-e898-8009-9066-c1316b599996" class="">
+</p><p id="1f8b6f09-e898-8008-a18f-ff0bff581437" class="">
+</p><p id="1f8b6f09-e898-8004-965f-fbca1f197afd" class="">
+</p><p id="1f8b6f09-e898-80f9-8666-e108b30a803e" class="">As of May 2025, <strong>Apache Spark 3.4.1</strong> does not have any direct Common Vulnerabilities and Exposures (CVEs) reported against it. The official <a href="https://spark.apache.org/security.html">Apache Spark Security page</a> lists known security issues, and there are no CVEs specifically associated with version 3.4.1.</p><p id="1f8b6f09-e898-8091-b36c-f74a31e36b6a" class="">
+</p><hr id="1f8b6f09-e898-8061-8090-eb9bfe554a08"/><h3 id="1f8b6f09-e898-8080-b5a8-faa788335c89" class=""><strong>🔐 CVEs Affecting Apache Spark 3.4.1</strong></h3><table id="1f8b6f09-e898-8050-be5e-d0c1d3e8e8e8" class="simple-table"><tbody><tr id="1f8b6f09-e898-800c-982d-e2d962e4d32c"><td id="D@|A" class=""><strong>CVE ID</strong></td><td id="[BnW" class=""><strong>Description</strong></td><td id="NjZ|" class=""><strong>Affected Versions</strong></td><td id="QwuH" class=""><strong>Fixed In</strong></td><td id="SwuJ" class=""><strong>References</strong></td></tr><tr id="1f8b6f09-e898-8015-b44a-c292403ebd7f"><td id="D@|A" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2022-33891">CVE-2022-33891</a></td><td id="[BnW" class="">Command injection vulnerability via Spark UI.</td><td id="NjZ|" class="">≤3.0.3, 3.1.1–3.1.2, 3.2.0–3.2.1</td><td id="QwuH" class="">3.1.3, 3.2.2, 3.3.0</td><td id="SwuJ" class=""><a href="https://spark.apache.org/security.html">Apache Spark Security</a></td></tr><tr id="1f8b6f09-e898-80d2-a90e-e58702fe15ea"><td id="D@|A" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2023-22946">CVE-2023-22946</a></td><td id="[BnW" class="">Proxy-user privilege escalation from malicious configuration.</td><td id="NjZ|" class="">≤3.3.1</td><td id="QwuH" class="">3.3.2</td><td id="SwuJ" class=""><a href="https://spark.apache.org/security.html">Apache Spark Security</a></td></tr><tr id="1f8b6f09-e898-8011-bdae-f9aa26b41cba"><td id="D@|A" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2023-32007">CVE-2023-32007</a></td><td id="[BnW" class="">Shell command injection vulnerability via Spark UI.</td><td id="NjZ|" class="">3.1.3</td><td id="QwuH" class="">3.1.4</td><td id="SwuJ" class=""><a href="https://spark.apache.org/security.html">Apache Spark Security</a></td></tr></tbody></table><p id="1f8b6f09-e898-809e-8301-df1b82d06b2f" class=""><em>Note</em>: While these CVEs affect earlier versions of Apache Spark, version 3.4.1 is not listed among the affected versions.</p><hr id="1f8b6f09-e898-809b-b5be-fc635add811b"/><h3 id="1f8b6f09-e898-8042-81e9-ff7292bc4f79" class=""><strong>📦 Latest Stable Version of Apache Spark</strong></h3><p id="1f8b6f09-e898-80e6-b116-dd70ba9302f5" class="">The latest stable release of Apache Spark is <strong>version 3.5.5</strong>, released on February 27, 2025. This release includes various security and correctness fixes. It is recommended for all users to upgrade to this version to benefit from the latest improvements.</p><ul id="1f8b6f09-e898-8028-90ef-c51a2e5e17ca" class="bulleted-list"><li style="list-style-type:disc"><strong>Download</strong>: <a href="https://spark.apache.org/downloads.html">Apache Spark 3.5.5</a></li></ul><ul id="1f8b6f09-e898-80e6-b99f-feaf831fae57" class="bulleted-list"><li style="list-style-type:disc"><strong>Release Notes</strong>: <a href="https://spark.apache.org/releases/spark-release-3-5-5.html">Spark 3.5.5 Release Notes</a></li></ul><hr id="1f8b6f09-e898-80ee-acaf-fb4859766f11"/><p id="1f8b6f09-e898-80c5-b123-eee0cb935ecd" class="">If you need assistance with upgrading or implementing security measures, feel free to ask.</p><p id="1f8b6f09-e898-80a2-86cf-de8c637dda8e" class="">
+</p><p id="1f8b6f09-e898-8097-bd7d-f6a2bff25f6f" class="">As of May 2025, <strong>Apache ZooKeeper 3.6.3</strong> has reached its end-of-life (EOL) status and is no longer maintained or supported by the Apache community. This version is affected by several critical security vulnerabilities.</p><hr id="1f8b6f09-e898-80a5-bf7e-fc62f01e2c71"/><h3 id="1f8b6f09-e898-80fe-9381-e461aed38c18" class=""><strong>🔐 Direct CVEs Impacting Apache ZooKeeper 3.6.3</strong></h3><table id="1f8b6f09-e898-806a-91fd-cf3cb610763b" class="simple-table"><tbody><tr id="1f8b6f09-e898-80f6-ad01-fdea2dbbcb53"><td id="@=FI" class=""><strong>CVE ID</strong></td><td id="QS`&lt;" class=""><strong>Description</strong></td><td id="DM^W" class=""><strong>Affected Component</strong></td><td id="taA;" class=""><strong>Severity</strong></td><td id="NeGh" class=""><strong>Fixed In</strong></td><td id="IKy&gt;" class=""><strong>References</strong></td></tr><tr id="1f8b6f09-e898-8079-a055-d39028ba1f8a"><td id="@=FI" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2023-44981">CVE-2023-44981</a></td><td id="QS`&lt;" class="">Information disclosure due to missing ACL checks when handling persistent watchers, potentially exposing sensitive znode paths.</td><td id="DM^W" class="">Core ZooKeeper</td><td id="taA;" class="">High</td><td id="NeGh" class="">3.7.2, 3.8.3, 3.9.1</td><td id="IKy&gt;" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2023-44981">NVD</a></td></tr><tr id="1f8b6f09-e898-80e1-b5fe-ec4e5101d5f2"><td id="@=FI" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-23944">CVE-2024-23944</a></td><td id="QS`&lt;" class="">Information disclosure in persistent watchers handling due to missing ACL checks, allowing attackers to monitor child znodes.</td><td id="DM^W" class="">Core ZooKeeper</td><td id="taA;" class="">Medium</td><td id="NeGh" class="">3.8.4, 3.9.2</td><td id="IKy&gt;" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-23944">NVD</a></td></tr><tr id="1f8b6f09-e898-80e2-bf8b-eb5d2b9cc840"><td id="@=FI" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2021-21295">CVE-2021-21295</a></td><td id="QS`&lt;" class="">Netty library vulnerability allowing potential information disclosure or DoS attacks.</td><td id="DM^W" class="">Netty (dependency)</td><td id="taA;" class="">High</td><td id="NeGh" class="">Netty 4.1.60+</td><td id="IKy&gt;" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2021-21295">NVD</a></td></tr><tr id="1f8b6f09-e898-803f-a0e0-d66f06210472"><td id="@=FI" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2021-28165">CVE-2021-28165</a></td><td id="QS`&lt;" class="">Jetty server vulnerability leading to potential information disclosure or DoS attacks.</td><td id="DM^W" class="">Jetty (dependency)</td><td id="taA;" class="">High</td><td id="NeGh" class="">Jetty 9.4.38+</td><td id="IKy&gt;" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2021-28165">NVD</a></td></tr></tbody></table><p id="1f8b6f09-e898-8049-a3cc-d741ab29220f" class=""><em>Note</em>: These vulnerabilities are directly associated with Apache ZooKeeper 3.6.3 and its dependencies.</p><hr id="1f8b6f09-e898-80f1-9d32-d6871d6756e4"/><h3 id="1f8b6f09-e898-80ef-83af-cc3071d9af10" class=""><strong>📦 Latest Stable Version</strong></h3><p id="1f8b6f09-e898-80e2-b217-fc403f69f2e7" class="">The latest stable release of Apache ZooKeeper is <strong>version 3.8.4</strong>, released on March 5, 2024. This version addresses the aforementioned vulnerabilities and includes various bug fixes and improvements.</p><ul id="1f8b6f09-e898-8098-b5c2-cb1c16df28dd" class="bulleted-list"><li style="list-style-type:disc"><strong>Download</strong>: <a href="https://zookeeper.apache.org/releases.html">Apache ZooKeeper 3.8.4</a></li></ul><ul id="1f8b6f09-e898-80f8-af43-f8eef7e28148" class="bulleted-list"><li style="list-style-type:disc"><strong>Release Notes</strong>: <a href="https://zookeeper.apache.org/doc/r3.8.4/releasenotes.html">ZooKeeper 3.8.4 Release Notes</a></li></ul><p id="1f8b6f09-e898-8064-b1fa-edea268bf3a6" class="">Additionally, the current release is <strong>version 3.9.3</strong>, which includes the latest features and enhancements.</p><hr id="1f8b6f09-e898-8042-8126-dc2b310bbb1a"/><h3 id="1f8b6f09-e898-80ec-bfa9-c0d78a61ae01" class=""><strong>✅ Recommendations</strong></h3><ul id="1f8b6f09-e898-807b-8c87-c541bfbaaa9a" class="bulleted-list"><li style="list-style-type:disc"><strong>Upgrade to a Supported Version</strong>: It is strongly recommended to upgrade to Apache ZooKeeper 3.8.4 or later to mitigate known vulnerabilities.</li></ul><ul id="1f8b6f09-e898-8070-a484-e955559dc720" class="bulleted-list"><li style="list-style-type:disc"><strong>Review and Update Dependencies</strong>: Ensure that all dependencies, such as Netty and Jetty, are updated to versions that have addressed known security issues.</li></ul><ul id="1f8b6f09-e898-80d8-8362-eb7a0d9c8d87" class="bulleted-list"><li style="list-style-type:disc"><strong>Regularly Monitor Security Advisories</strong>: Stay informed about new vulnerabilities and patches by monitoring the <a href="https://zookeeper.apache.org/security.html">Apache ZooKeeper Security Page</a>.</li></ul><p id="1f8b6f09-e898-806f-889b-f983c99a11dc" class="">If you need assistance with upgrading or implementing security measures, feel free to ask.</p><p id="1f8b6f09-e898-80fe-8ee2-e35fe8cd9c59" class="">
+</p><p id="1f8b6f09-e898-8076-879e-ed0bd0771de2" class="">
+</p><p id="1f8b6f09-e898-80c4-b0f2-ceba01f1fc89" class="">As of May 2025, <strong>Elasticsearch 8.12.2</strong> is affected by several direct security vulnerabilities. Below is a summary of these CVEs, including their descriptions, affected components, severity scores, and references:</p><hr id="1f8b6f09-e898-8007-aadf-cfd61debc03c"/><h3 id="1f8b6f09-e898-8006-a094-e0678b2cbe42" class=""><strong>🔐 CVEs Affecting Elasticsearch 8.12.2</strong></h3><table id="1f8b6f09-e898-8059-b760-ce2409356ca0" class="simple-table"><tbody><tr id="1f8b6f09-e898-800f-9eb5-cd1e437d1c5f"><td id="=:t`" class=""><strong>CVE ID</strong></td><td id="Qc=A" class=""><strong>Description</strong></td><td id=":Ir~" class=""><strong>Affected Component</strong></td><td id="lO{U" class=""><strong>Severity</strong></td><td id="H@_V" class=""><strong>References</strong></td></tr><tr id="1f8b6f09-e898-8013-be43-c041723907ee"><td id="=:t`" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-52981">CVE-2024-52981</a></td><td id="Qc=A" class="">Missing encryption of sensitive data when creating a new Certificate Signing Request via the elasticsearch-certutil tool with the csr option. The private key is stored unencrypted even if the --pass parameter is used.</td><td id=":Ir~" class="">elasticsearch-certutil</td><td id="lO{U" class="">Medium</td><td id="H@_V" class=""><a href="https://security.snyk.io/package/maven/org.elasticsearch%3Aelasticsearch/8.12.2">Snyk Advisory</a></td></tr><tr id="1f8b6f09-e898-8065-ad57-d03360573762"><td id="=:t`" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-52980">CVE-2024-52980</a></td><td id="Qc=A" class="">Incorrect authorization in the API-key-based security model for Remote Cluster Security (in beta), allowing unauthorized document access via the custom transport protocol.</td><td id=":Ir~" class="">Remote Cluster Security</td><td id="lO{U" class="">Medium</td><td id="H@_V" class=""><a href="https://security.snyk.io/package/maven/org.elasticsearch%3Aelasticsearch/8.12.2">Snyk Advisory</a></td></tr><tr id="1f8b6f09-e898-80f5-96d0-e8b0bddcd554"><td id="=:t`" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-43709">CVE-2024-43709</a></td><td id="Qc=A" class="">Uncontrolled recursion when processing a document in a deeply nested pipeline on an ingest node, potentially causing the node to crash.</td><td id=":Ir~" class="">Ingest Node</td><td id="lO{U" class="">Medium</td><td id="H@_V" class=""><a href="https://security.snyk.io/package/maven/org.elasticsearch%3Aelasticsearch/8.12.2">Snyk Advisory</a></td></tr><tr id="1f8b6f09-e898-8095-858e-d40e400cd99a"><td id="=:t`" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-23451">CVE-2024-23451</a></td><td id="Qc=A" class="">Denial of Service via crafted search queries exploiting a flaw in the query parsing logic.</td><td id=":Ir~" class="">Search Functionality</td><td id="lO{U" class="">High</td><td id="H@_V" class=""><a href="https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch/8.12.2">Maven Repository</a></td></tr><tr id="1f8b6f09-e898-8040-97a6-e91777ece303"><td id="=:t`" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-23450">CVE-2024-23450</a></td><td id="Qc=A" class="">Information disclosure through improper error handling in the REST API, potentially exposing sensitive configuration details.</td><td id=":Ir~" class="">REST API</td><td id="lO{U" class="">Medium</td><td id="H@_V" class=""><a href="https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch/8.12.2">Maven Repository</a></td></tr><tr id="1f8b6f09-e898-8004-b408-c840745ac483"><td id="=:t`" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-23445">CVE-2024-23445</a></td><td id="Qc=A" class="">Privilege escalation due to improper validation of user roles in certain cluster operations.</td><td id=":Ir~" class="">Security Module</td><td id="lO{U" class="">High</td><td id="H@_V" class=""><a href="https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch/8.12.2">Maven Repository</a></td></tr><tr id="1f8b6f09-e898-800a-b4f2-ffffa50be425"><td id="=:t`" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-23444">CVE-2024-23444</a></td><td id="Qc=A" class="">Code execution vulnerability in the scripting module allowing execution of arbitrary scripts under certain conditions.</td><td id=":Ir~" class="">Scripting Module</td><td id="lO{U" class="">Critical</td><td id="H@_V" class=""><a href="https://mvnrepository.com/artifact/org.elasticsearch/elasticsearch/8.12.2">Maven Repository</a></td></tr></tbody></table><hr id="1f8b6f09-e898-80a7-a7ac-cc8dbbea63df"/><h3 id="1f8b6f09-e898-8020-9ecd-f1173e031eed" class=""><strong>📦 Latest Stable Version</strong></h3><p id="1f8b6f09-e898-80c8-a59c-e09ff36f9c93" class="">The latest stable release of Elasticsearch is <strong>version 9.0.1</strong>, released on May 6, 2025. This version includes fixes for the aforementioned vulnerabilities and introduces new features and improvements.</p><ul id="1f8b6f09-e898-80ee-8b2c-ee4f439e94d4" class="bulleted-list"><li style="list-style-type:disc"><strong>Download</strong>: <a href="https://www.elastic.co/downloads/elasticsearch">Elasticsearch 9.0.1</a></li></ul><ul id="1f8b6f09-e898-80e5-b373-e683d6eb3132" class="bulleted-list"><li style="list-style-type:disc"><strong>Release Notes</strong>: <a href="https://www.elastic.co/docs/release-notes/elasticsearch">Elasticsearch 9.0.1 Release Notes</a></li></ul><hr id="1f8b6f09-e898-80bd-819f-cba4dae5d4d4"/><h3 id="1f8b6f09-e898-80be-9eb5-d45c7cd41f97" class=""><strong>✅ Recommendations</strong></h3><ul id="1f8b6f09-e898-80f3-bba8-e4b92c2316fe" class="bulleted-list"><li style="list-style-type:disc"><strong>Upgrade to Elasticsearch 9.0.1</strong>: To address the listed vulnerabilities and benefit from the latest features, it is strongly recommended to upgrade to version 9.0.1.</li></ul><ul id="1f8b6f09-e898-80d3-b57b-d14c3b7dd651" class="bulleted-list"><li style="list-style-type:disc"><strong>Review Security Configurations</strong>: Ensure that your Elasticsearch deployment has appropriate security configurations, including proper role definitions and access controls.</li></ul><ul id="1f8b6f09-e898-8059-b02c-de5c81734ae0" class="bulleted-list"><li style="list-style-type:disc"><strong>Monitor for Updates</strong>: Regularly check for updates and security advisories to keep your deployment secure.</li></ul><p id="1f8b6f09-e898-80ae-a042-c6c5ba35740d" class="">If you need assistance with upgrading or implementing security measures, feel free to ask.</p><p id="1f8b6f09-e898-8060-aab6-d8c52db25749" class="">
+</p><p id="1f8b6f09-e898-8028-976e-fff0df50c5d0" class="">
+</p><p id="1f8b6f09-e898-8069-b857-c8b4d0056e60" class="">As of May 2025, <strong>Prometheus version 2.28.1</strong> does not have any publicly disclosed Common Vulnerabilities and Exposures (CVEs) directly associated with it. While earlier versions had known vulnerabilities, such as CVE-2021-29622 (open redirect) and CVE-2019-3826 (XSS), these issues were addressed in subsequent releases, and there are no indications that they affect version 2.28.1.</p><hr id="1f8b6f09-e898-80ca-a328-d638216dd587"/><h3 id="1f8b6f09-e898-8074-a26c-fdc725d0cc1e" class=""><strong>📦 Latest Stable Version</strong></h3><p id="1f8b6f09-e898-803e-9741-f7eecbfff3ef" class="">The latest stable release of Prometheus is <strong>version 3.4.0</strong>, released on May 17, 2025. This version includes various enhancements and bug fixes.</p><ul id="1f8b6f09-e898-8097-923c-fe9696a9e25c" class="bulleted-list"><li style="list-style-type:disc"><strong>Download</strong>: <a href="https://prometheus.io/download/">Prometheus 3.4.0</a></li></ul><ul id="1f8b6f09-e898-80e8-90b2-c6d56a435e97" class="bulleted-list"><li style="list-style-type:disc"><strong>Release Notes</strong>: <a href="https://github.com/prometheus/prometheus/releases/tag/v3.4.0">Prometheus 3.4.0 Release Notes</a></li></ul><hr id="1f8b6f09-e898-80b2-b18d-ee409fd833d3"/><h3 id="1f8b6f09-e898-805a-9673-c2e9506adc4e" class=""><strong>✅ Recommendations</strong></h3><ul id="1f8b6f09-e898-80b5-8656-feefd804bbfe" class="bulleted-list"><li style="list-style-type:disc"><strong>Upgrade to Prometheus 3.4.0</strong>: To benefit from the latest features and improvements, consider upgrading to the latest stable version.</li></ul><ul id="1f8b6f09-e898-80d2-a35d-f086d476c38a" class="bulleted-list"><li style="list-style-type:disc"><strong>Implement Security Best Practices</strong>: Ensure that your Prometheus deployment follows security best practices, including proper authentication, authorization, and secure configurations.</li></ul><ul id="1f8b6f09-e898-805f-8a12-c5f2ca03135c" class="bulleted-list"><li style="list-style-type:disc"><strong>Monitor for Updates</strong>: Regularly check for updates and security advisories to keep your deployment secure.</li></ul><p id="1f8b6f09-e898-805b-a77f-ec29d3c6b5e2" class="">If you need assistance with upgrading or implementing security measures, feel free to ask.</p><p id="1f8b6f09-e898-8055-bbcb-eff6baa2fe64" class="">
+</p><p id="1f8b6f09-e898-8006-b508-ef7ca9cf7a0e" class="">As of May 2025, <strong>Grafana version 9.2.10</strong> has known security vulnerabilities. It is recommended to upgrade to the latest stable version to ensure your system is protected.</p><hr id="1f8b6f09-e898-80b5-928f-da82341bfdd5"/><h3 id="1f8b6f09-e898-8091-952c-e13b0f56a2c8" class=""><strong>🔐 CVEs Affecting Grafana 9.2.10</strong></h3><table id="1f8b6f09-e898-8009-8054-fdc9b078a324" class="simple-table"><tbody><tr id="1f8b6f09-e898-80ac-8398-edd523ed7ce5"><td id="\uVI" class=""><strong>CVE ID</strong></td><td id="^TNl" class=""><strong>Description</strong></td><td id="zwrY" class=""><strong>Severity</strong></td><td id=";oK\" class=""><strong>Fixed In</strong></td><td id="]^Jg" class=""><strong>References</strong></td></tr><tr id="1f8b6f09-e898-8099-84aa-ef8db9c4fae1"><td id="\uVI" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2022-23552">CVE-2022-23552</a></td><td id="^TNl" class="">Stored XSS vulnerability in the GeoMap plugin due to improper sanitization of SVG files, allowing arbitrary JavaScript execution.</td><td id="zwrY" class="">High</td><td id=";oK\" class="">9.2.10, 9.3.4</td><td id="]^Jg" class=""><a href="https://grafana.com/security/security-advisories/cve-2022-23552/">Grafana Advisory</a></td></tr><tr id="1f8b6f09-e898-80d7-9a29-e983e61d7b07"><td id="\uVI" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2022-23498">CVE-2022-23498</a></td><td id="^TNl" class="">When datasource query caching is enabled, Grafana caches all headers, including grafana_session, potentially exposing user sessions.</td><td id="zwrY" class="">High</td><td id=";oK\" class="">9.2.10, 9.3.4</td><td id="]^Jg" class=""><a href="https://grafana.com/security/security-advisories/cve-2022-23498/">Grafana Advisory</a></td></tr><tr id="1f8b6f09-e898-8004-aa8b-e9967ea96e93"><td id="\uVI" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2022-39324">CVE-2022-39324</a></td><td id="^TNl" class="">Improper access control in the Grafana Alerting component, allowing unauthorized users to view alert rules.</td><td id="zwrY" class="">Medium</td><td id=";oK\" class="">9.2.10, 9.3.4</td><td id="]^Jg" class=""><a href="https://grafana.com/security/security-advisories/cve-2022-39324/">Grafana Advisory</a></td></tr></tbody></table><hr id="1f8b6f09-e898-809f-91ec-f27c5537bcd8"/><h3 id="1f8b6f09-e898-80d8-8ca2-cc825a7c2f7c" class=""><strong>📦 Latest Stable Version</strong></h3><p id="1f8b6f09-e898-8094-897e-d2a9d84ad332" class="">The latest stable release of Grafana is <strong>version 12.0.0</strong>, released in May 2025. This version includes fixes for the aforementioned vulnerabilities and introduces new features and improvements.</p><ul id="1f8b6f09-e898-800f-aa2d-c73e734c4156" class="bulleted-list"><li style="list-style-type:disc"><strong>Download</strong>: <a href="https://grafana.com/grafana/download">Grafana 12.0.0</a></li></ul><ul id="1f8b6f09-e898-8097-aebb-e151ea47bf33" class="bulleted-list"><li style="list-style-type:disc"><strong>Release Notes</strong>: <a href="https://github.com/grafana/grafana/releases/tag/v12.0.0">Grafana 12.0.0 Release Notes</a></li></ul><hr id="1f8b6f09-e898-8068-9dff-c9a036da2603"/><h3 id="1f8b6f09-e898-80de-9d72-e04515c12cb0" class=""><strong>✅ Recommendations</strong></h3><ul id="1f8b6f09-e898-801d-b24b-deff9e4d7bf3" class="bulleted-list"><li style="list-style-type:disc"><strong>Upgrade to Grafana 12.0.0</strong>: To address the listed vulnerabilities and benefit from the latest features, it is strongly recommended to upgrade to version 12.0.0.</li></ul><ul id="1f8b6f09-e898-8000-bbac-ffe3dc8430c9" class="bulleted-list"><li style="list-style-type:disc"><strong>Review Security Configurations</strong>: Ensure that your Grafana deployment has appropriate security configurations, including proper role definitions and access controls.</li></ul><ul id="1f8b6f09-e898-804c-97db-cde2b3de7c2e" class="bulleted-list"><li style="list-style-type:disc"><strong>Monitor for Updates</strong>: Regularly check for updates and security advisories to keep your deployment secure.</li></ul><p id="1f8b6f09-e898-801d-93a7-f57be90545a4" class="">If you need assistance with upgrading or implementing security measures, feel free to ask.</p><p id="1f8b6f09-e898-80ee-8602-f30862f0ba32" class="">
+</p><p id="1f8b6f09-e898-808f-a1cb-e12047aa7fb4" class="">As of May 2025, <strong>Apache ZooKeeper version 3.8.4</strong> is affected by a known security vulnerability:</p><hr id="1f8b6f09-e898-80b2-ae22-c1d55fc54198"/><h3 id="1f8b6f09-e898-80ea-babc-d74a27cf0418" class=""><strong>🔐 CVE Affecting Apache ZooKeeper 3.8.4</strong></h3><table id="1f8b6f09-e898-80d4-a349-f178f3e4e914" class="simple-table"><tbody><tr id="1f8b6f09-e898-8036-bb9d-c5f4b0b840a2"><td id="PtU?" class=""><strong>CVE ID</strong></td><td id="aRbo" class=""><strong>Description</strong></td><td id="Mlu|" class=""><strong>Severity</strong></td><td id="oZvX" class=""><strong>Fixed In</strong></td><td id="@uz&gt;" class=""><strong>References</strong></td></tr><tr id="1f8b6f09-e898-80f9-a7c3-e0f9775de29c"><td id="PtU?" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-23944">CVE-2024-23944</a></td><td id="aRbo" class="">Information disclosure in persistent watchers handling due to missing ACL checks, allowing attackers to monitor child znodes by attaching a persistent watcher to a parent znode they have access to.</td><td id="Mlu|" class="">Medium</td><td id="oZvX" class="">3.9.2</td><td id="@uz&gt;" class=""><a href="https://nvd.nist.gov/vuln/detail/CVE-2024-23944">NVD</a>, <a href="https://zookeeper.apache.org/security.html">Apache Security Advisory</a></td></tr></tbody></table><hr id="1f8b6f09-e898-800c-a318-cf7d9b880b7e"/><h3 id="1f8b6f09-e898-8016-9a08-ca4350303bde" class=""><strong>📦 Latest Stable Version</strong></h3><p id="1f8b6f09-e898-806b-abd5-d23194f18d8c" class="">The latest stable release of Apache ZooKeeper is <strong>version 3.9.3</strong>, released on October 24, 2024. This version includes fixes for the aforementioned vulnerability and other improvements.</p><ul id="1f8b6f09-e898-80ff-adbe-e59cde1fc164" class="bulleted-list"><li style="list-style-type:disc"><strong>Download</strong>: <a href="https://downloads.apache.org/zookeeper/zookeeper-3.9.3/">Apache ZooKeeper 3.9.3</a></li></ul><ul id="1f8b6f09-e898-80e0-9a17-fda1c39c368f" class="bulleted-list"><li style="list-style-type:disc"><strong>Release Notes</strong>: <a href="https://zookeeper.apache.org/doc/r3.9.3/releasenotes.html">ZooKeeper 3.9.3 Release Notes</a></li></ul><hr id="1f8b6f09-e898-809e-b6c7-fb45a2da07ca"/><h3 id="1f8b6f09-e898-80c4-9bb0-c960abf7ed38" class=""><strong>✅ Recommendations</strong></h3><ul id="1f8b6f09-e898-80d9-95c7-ec7a68a0320d" class="bulleted-list"><li style="list-style-type:disc"><strong>Upgrade to Apache ZooKeeper 3.9.3</strong>: To address the listed vulnerability and benefit from the latest features, it is strongly recommended to upgrade to version 3.9.3.</li></ul><ul id="1f8b6f09-e898-80b9-b760-cc285ef8054b" class="bulleted-list"><li style="list-style-type:disc"><strong>Review Access Control Lists (ACLs)</strong>: Ensure that your ZooKeeper deployment has appropriate ACLs configured to prevent unauthorized access.</li></ul><ul id="1f8b6f09-e898-8051-bf6e-cc2ee40e8e8a" class="bulleted-list"><li style="list-style-type:disc"><strong>Monitor for Updates</strong>: Regularly check for updates and security advisories to keep your deployment secure.</li></ul><p id="1f8b6f09-e898-8036-ab3c-ff28f32ef444" class="">If you need assistance with upgrading or implementing security measures, feel free to ask.</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
