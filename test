@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Set your base folder path
+BASE_DIR="/your/folder/path"
+
+# Get cutoff date: 6 months ago from today
+CUTOFF_DATE=$(date -d "6 months ago" +%Y%m%d)
+
+cd "$BASE_DIR" || exit 1
+
+for folder in */; do
+  folder_name="${folder%/}"
+
+  # Match folder names in YYYYMMDD format
+  if [[ "$folder_name" =~ ^[0-9]{8}$ ]]; then
+    # Compare folder name with cutoff date
+    if [[ "$folder_name" -lt "$CUTOFF_DATE" ]]; then
+      echo "Deleting: $folder_name"
+      rm -rf "$folder_name"
+    else
+      echo "Keeping:  $folder_name"
+    fi
+  fi
+done
