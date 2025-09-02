@@ -1,0 +1,331 @@
+Awesome — here’s a complete, ready-to-run Bash script that keeps your original behavior and adds the option to delete strictly by a partition month (e.g., 202507) using a configurable partition key (e.g., start_dt). After the script you’ll find clear run instructions and examples.
+
+
+---
+
+#!/bin/bash
+# hdfs_ageing.sh
+# Purpose: Clean HDFS data either by mtime+retention (original behavior)
+#          OR by partition month (e.g., start_dt=YYYYMM[DD[HH]]) when requested.
+# Logs: JSON lines to $LOGFILENAME with simple log rotation.
+
+set -u
+# (do NOT use set -e: we want to handle non-zero exit codes ourselves)
+
+##### ===== CONFIG (edit if needed) ==========================================
+CONFFILENAME=/opt/telstra/omega/omega-mgmt-current/hdfs-ageing/conf/hdfs-ageing.conf
+LOGFILENAME=/var/log/omega/hdfs-ageing/hdfs_ageing.log
+
+# Rotate the log when it exceeds this many bytes (default 10MB)
+LOGFILESIZE=10485760
+# Keep this many rotated logs (newest first)
+NUMLOGFILES=5
+
+VERSION=omega-mgmt-1.1.0
+debug=1      # 1=DEBUG logs allowed. You can override via -debug=1
+##### =======================================================================
+
+# --- Partition-month deletion options (new) ---------------------------------
+PARTITION_KEY=start_dt   # key in paths like .../start_dt=20250805
+DEL_MONTH=""             # when set (YYYYMM), delete partitions for that month; ignores mtime
+DRYRUN=0                 # 1 = only log what would be done, 0 = actually delete
+# ---------------------------------------------------------------------------
+
+##############################################################################
+# Logging helpers
+##############################################################################
+logJson(){ # usage: logJson level [feed path message] | logJson level message
+  local level="$1"; shift || true
+  if ! [[ "$level" == "DEBUG" && "$debug" == "0" ]]; then
+    local CURRTIME
+    CURRTIME=$(date '+%Y-%m-%d %H:%M:%S.%3N')
+    if [[ $# -ge 3 ]]; then
+      # 3+ args => feed, path, message
+      local feed="$1" path="$2" msg="$3"
+      cat <<EOF >> "$LOGFILENAME"
+{"version":"$VERSION","timestamp":"$CURRTIME","logLevel":"$level","feedName":"$feed","path":"$path","transactionType":"DeleteHDFSAgeingFile","message":"$msg"}
+EOF
+    else
+      # 1 arg => message only
+      local msg="$1"
+      cat <<EOF >> "$LOGFILENAME"
+{"version":"$VERSION","timestamp":"$CURRTIME","logLevel":"$level","transactionType":"DeleteHDFSAgeingFile","message":"$msg"}
+EOF
+    fi
+  fi
+}
+
+alarmJson(){ # usage: alarmJson feed path message alarmID
+  local feed="$1" path="$2" msg="$3" alarmID="$4"
+  local CURRTIME
+  CURRTIME=$(date '+%Y-%m-%d %H:%M:%S.%3N')
+  cat <<EOF >> "$LOGFILENAME"
+{"version":"$VERSION","timestamp":"$CURRTIME","logLevel":"ALARM","alarmID":"$alarmID","feedName":"$feed","transactionType":"DeleteHDFSAgeingFile","path":"$path","message":"$msg"}
+EOF
+}
+
+##############################################################################
+# CLI parsing
+##############################################################################
+for arg in "$@"; do
+  key=${arg%%=*}
+  val=${arg#*=}
+  case "$key" in
+    -debug)       debug="$val" ;;
+    -pkey)        PARTITION_KEY="$val" ;;            # e.g. -pkey=start_dt
+    -del_month)   DEL_MONTH="$val" ;;                # e.g. -del_month=202507
+    -dryrun)      [[ "$val" =~ ^(1|on|true)$ ]] && DRYRUN=1 || DRYRUN=0 ;;
+  esac
+done
+
+# Validate del_month when provided
+if [[ -n "$DEL_MONTH" && ! "$DEL_MONTH" =~ ^[0-9]{6}$ ]]; then
+  echo "ERROR: -del_month must be YYYYMM (e.g., 202507)" >&2
+  exit 2
+fi
+
+logJson "INFO" "$0 started (pkey=$PARTITION_KEY del_month=${DEL_MONTH:-none} dryrun=$DRYRUN)"
+
+today=$(date +%s)
+
+##############################################################################
+# Pre-flight checks
+##############################################################################
+if [[ ! -f "$CONFFILENAME" ]]; then
+  logJson "ALARM" "Config file \"$CONFFILENAME\" not present; exiting"
+  exit 1
+fi
+
+# Ensure log dir exists
+mkdir -p "$(dirname "$LOGFILENAME")" || true
+touch "$LOGFILENAME" || {
+  echo "ERROR: Cannot write to $LOGFILENAME" >&2
+  exit 1
+}
+
+##############################################################################
+# Main loop over config entries
+# Config format (CSV), ignore comments:
+# feedName,hdfs_dir,age_in_days,alarmID
+##############################################################################
+while IFS= read -r entry; do
+  [[ -z "$entry" || "$entry" =~ ^# ]] && continue
+
+  feedName=$(echo "$entry" | awk -F',' '{print $1}')
+  dir=$(echo      "$entry" | awk -F',' '{print $2}')
+  age=$(echo      "$entry" | awk -F',' '{print $3}')
+  alarmID=$(echo  "$entry" | awk -F',' '{print $4}')
+
+  logJson "DEBUG" "$feedName" "$dir" "age threshold is $age days"
+
+  # Check the directory is listable first (do NOT pipe here; we want $?)
+  /usr/bin/hdfs dfs -ls "$dir" >/dev/null 2>&1
+  rtn=$?
+  if [[ $rtn -ne 0 ]]; then
+    alarmJson "$feedName" "$dir" "Fail to read HDFS folder" "$alarmID"
+    continue
+  fi
+
+  # Now iterate items. Use the path as the LAST field (space-safe)
+  /usr/bin/hdfs dfs -ls "$dir" | while read -r line; do
+    # Skip empty or header-ish lines
+    [[ -z "$line" ]] && continue
+
+    filePath=$(printf '%s\n' "$line" | awk '{print $NF}')
+    [[ -z "$filePath" ]] && continue
+
+    if [[ -n "$DEL_MONTH" ]]; then
+      # ------- NEW: targeted delete by partition month (YYYYMM) -------------
+      # Accept 6..10 digits after the partition key: YYYYMM[DD[HH]]
+      part=$(printf '%s\n' "$filePath" | sed -n "s/.*${PARTITION_KEY}=\\([0-9]\\{6,10\\}\\).*/\\1/p")
+      if [[ -z "$part" ]]; then
+        logJson "DEBUG" "$feedName" "$filePath" "No ${PARTITION_KEY}=… token; skipping (month purge mode)"
+        continue
+      fi
+
+      part_month=${part:0:6}
+      if [[ "$part_month" == "$DEL_MONTH" ]]; then
+        if [[ $DRYRUN -eq 1 ]]; then
+          logJson "INFO" "$feedName" "$filePath" "DRYRUN: would delete (month purge $DEL_MONTH)"
+        else
+          result=$(/usr/bin/hdfs dfs -rm -r -skipTrash "$filePath" 2>&1); rtn=$?
+          if [[ $rtn -ne 0 ]]; then
+            alarmJson "$feedName" "$filePath" "Failed to delete (month purge $DEL_MONTH)" "$alarmID"
+          else
+            logJson "INFO" "$feedName" "$filePath" "Deleted (month purge $DEL_MONTH)"
+          fi
+        fi
+      else
+        logJson "DEBUG" "$feedName" "$filePath" "Keep: ${PARTITION_KEY} month=$part_month != target ${DEL_MONTH}"
+      fi
+      continue
+    fi
+
+    # ------- ORIGINAL: mtime + retention in days ----------------------------
+    dir_date=$(printf '%s\n' "$line" | awk '{print $6}')
+    if [[ -n "$dir_date" ]]; then
+      diff_days=$(( ( today - $(date -d "$dir_date" +%s) ) / (24*60*60) ))
+      logJson "DEBUG" "$feedName" "$filePath" "mtime=$dir_date, age=$diff_days"
+      if [[ $diff_days -gt $age ]]; then
+        if [[ $DRYRUN -eq 1 ]]; then
+          logJson "INFO" "$feedName" "$filePath" "DRYRUN: would delete (age=${diff_days}d > ${age}d)"
+        else
+          result=$(/usr/bin/hdfs dfs -rm -r -skipTrash "$filePath" 2>&1); rtn=$?
+          if [[ $rtn -ne 0 ]]; then
+            alarmJson "$feedName" "$filePath" "Fail to delete aged HDFS file (mtime)" "$alarmID"
+          else
+            logJson "INFO" "$feedName" "$filePath" "Deleted by mtime (retention=${age}d)"
+          fi
+        fi
+      fi
+    fi
+  done
+
+done < "$CONFFILENAME"
+
+logJson "INFO" "$0 finished"
+
+##############################################################################
+# Simple log rotation
+##############################################################################
+CURRSIZE=$(ls -altr "$LOGFILENAME" | awk '{print $5}' 2>/dev/null || echo 0)
+if (( CURRSIZE > LOGFILESIZE )); then
+  CURRDATEANDTIME=$(date +%Y_%m_%d_%H_%M)
+  NEWLOGFILENAME="${LOGFILENAME}.${CURRDATEANDTIME}"
+  mv "$LOGFILENAME" "$NEWLOGFILENAME"
+  : > "$LOGFILENAME"   # recreate empty log
+
+  # Remove older backups beyond NUMLOGFILES (keep newest first)
+  mapfile -t BACKUPS < <(ls -1t "${LOGFILENAME}."* 2>/dev/null || true)
+  if (( ${#BACKUPS[@]} > NUMLOGFILES )); then
+    for (( i=NUMLOGFILES; i<${#BACKUPS[@]}; i++ )); do
+      logJson "DEBUG" "$0" "${BACKUPS[$i]}" "remove old rotated log"
+      rm -f "${BACKUPS[$i]}"
+    done
+  fi
+fi
+
+exit 0
+
+
+---
+
+How to run
+
+1) Prepare the config file
+
+Path (by default):
+
+/opt/telstra/omega/omega-mgmt-current/hdfs-ageing/conf/hdfs-ageing.conf
+
+Each non-comment line:
+
+feedName,hdfs_dir,age_in_days,alarmID
+
+Example:
+
+TRUECALL,/TATRA/RAW/TRUECALL_CSV,30,ALARM-1001
+
+> The age_in_days is only used when not doing a month purge.
+
+
+
+
+---
+
+2) Make the script executable
+
+chmod +x hdfs_ageing.sh
+
+
+---
+
+3) Usage & examples
+
+A) Delete by partition month (NEW behavior)
+
+Deletes any path under each configured directory whose partition key (default start_dt) begins with the specified YYYYMM.
+
+Basic month purge (e.g., July 2025):
+
+./hdfs_ageing.sh -pkey=start_dt -del_month=202507
+
+Dry run first (highly recommended):
+
+./hdfs_ageing.sh -pkey=start_dt -del_month=202507 -dryrun=on
+
+You’ll see INFO/DEBUG logs of what would be deleted, but no actual removals.
+
+Different partition key (e.g., dt= in paths):
+
+./hdfs_ageing.sh -pkey=dt -del_month=202508
+
+
+> Works for paths like:
+
+/TATRA/RAW/TRUECALL_CSV/start_dt=20250805/...
+/data/curated/dt=202507/...
+
+The script reads digits after the key and matches the first 6 (YYYYMM).
+
+
+
+B) Original retention by mtime (no month purge)
+
+If you don’t pass -del_month, the script behaves like before:
+
+Lists each configured HDFS dir,
+
+Computes item age in days from hdfs dfs -ls date,
+
+Deletes when age > retention_days.
+
+
+./hdfs_ageing.sh
+# or with extra DEBUG
+./hdfs_ageing.sh -debug=1
+# dry run (see what would be deleted by mtime rule)
+./hdfs_ageing.sh -dryrun=on
+
+
+---
+
+4) Logs
+
+JSON lines at:
+
+/var/log/omega/hdfs-ageing/hdfs_ageing.log
+
+auto-rotates at 10MB (keeps 5 newest backups).
+
+includes INFO, DEBUG, and ALARM entries.
+
+
+
+---
+
+5) Schedule (optional)
+
+Run nightly at 02:15 with a month purge for the previous month:
+
+# Example crontab (compute last month on the fly)
+15 2 * * * /path/to/hdfs_ageing.sh -pkey=start_dt -del_month=$(date -d "last month" +\%Y\%m) >> /var/log/omega/hdfs-ageing/cron.log 2>&1
+
+Or keep the original mtime retention:
+
+30 2 * * * /path/to/hdfs_ageing.sh >> /var/log/omega/hdfs-ageing/cron.log 2>&1
+
+
+---
+
+6) Safety checklist
+
+Always run once with -dryrun=on to verify matches.
+
+Confirm your paths contain the exact key, e.g., start_dt= or dt=.
+
+Remember deletes use -rm -r -skipTrash (permanent).
+
+
+If you want, I can also wire a whitelist/blacklist or a “min depth” guard so you never delete the top-level directory by accident.
+
