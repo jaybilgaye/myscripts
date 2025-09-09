@@ -1,0 +1,219 @@
+Perfect. Below is the full script with no changes to your existing behavior, plus one config-driven option:
+
+Add an optional 5th column in the config: purgeMonth as YYYYMM.
+
+When this 5th field is present for a row, the script will, for that row only, delete entries whose path contains start_dt=YYYYMMDD and whose first 6 digits equal purgeMonth.
+
+If 5th field is empty or missing, the original mtime + age logic runs exactly as before.
+
+
+I clearly marked the new code with # ==== NEW comments.
+
+#!/bin/bash
+
+###### The purpose of the script is to delete older data from HDFS according to requirements.
+###### The script uses a configuration file which contains comma (,) separated values of base directories and respective age.
+###### The config file can be updated/modified however it is not encouraged to update the script.
+###### Alarm event will be logged if a deletion fails.
+###### Author: Vivian Li, Telstra
+#MNPD: hdfs://asiago-hdp/RAW/MNPD/IOM/TRNAM/
+#OMEGA: hdfs://rome-model/OMEGA/RAW/SAMISD/
+
+CONFFILENAME=/opt/telstra/omega/omega-mgmt-current/hdfs-ageing/conf/hdfs-ageing.conf
+LOGFILENAME=/var/log/omega/hdfs-ageing/hdfs_ageing.log
+
+# LOGFILESIZE in bytes
+LOGFILESIZE=10485760
+# NUMLOGFILES log files to retain
+NUMLOGFILES=5
+VERSION=omega-mgmt-1.0.0
+debug=1
+
+# logJson Usage:
+# logJson $logLevel $feedName $path $message
+# Or:
+# logJson $logLevel $message
+
+logJson(){
+    if ! [[ $1 == "DEBUG" && $debug == "0" ]]; then
+        CURRTIME=`date '+%Y-%m-%d %H:%M:%S.%3N'`
+        inputNum=$#
+
+        # EOF must start from beginning of line
+        if [[ $inputNum -gt 2 ]]; then
+            cat << EOF >> $LOGFILENAME
+{"version":"$VERSION", "timestamp":"$CURRTIME", "logLevel":"$1", "feedName":"$2", "path":"$3", "transactionType":"DeleteHDFSAgeingFile", "message":"$4"}
+EOF
+        else
+            cat << EOF >> $LOGFILENAME
+{"version":"$VERSION", "timestamp":"$CURRTIME", "logLevel":"$1", "transactionType":"DeleteHDFSAgeingFile", "message":"$2"}
+EOF
+        fi
+    fi
+}
+
+# parameter: $feedName $fileName $message $alarmID
+alarmJson(){
+cat << EOF >> $LOGFILENAME
+{"version":"$VERSION", "timestamp":"$CURRTIME", "logLevel":"ALARM", "alarmID":"$4", "feedName":"$1", "transactionType":"DeleteHDFSAgeingFile", "path":"$2", "message":"$3"}
+EOF
+}
+
+logJson "INFO" "$0 started"
+
+for var in "$@"
+do
+    var1=$(echo $var | cut -f1 -d=)
+    var2=$(echo $var | cut -f2 -d=)
+    if [[ $var1 == "-debug" ]]; then
+        debug=1
+    fi
+done
+
+today=`date +'%s'`
+
+###### Checking whether the config file exists.
+if [ ! -f $CONFFILENAME ]; then
+    logJson "INFO" "Configuration file \"$CONFFILENAME\" not present; exiting the script......."
+    exit 1
+fi
+
+# Config format (original 4 fields preserved), with an OPTIONAL 5th field:
+# feedName,hdfs_dir,age,alarmID[,purgeMonth]
+# - purgeMonth (optional) must be YYYYMM. If present for a row, that row will
+#   delete entries whose path contains start_dt=YYYYMMDD with YYYYMM == purgeMonth.
+
+for entry in `cat ${CONFFILENAME} | grep -v ^#`
+do
+    feedName=`echo $entry | awk -F"," '{print $1}'`
+    dir=`echo $entry | awk -F"," '{print $2}'`
+    age=`echo $entry | awk -F"," '{print $3}'`
+    alarmID=`echo $entry | awk -F"," '{print $4}'`
+    purgeMonth=`echo $entry | awk -F"," '{print $5}'`   # ==== NEW (optional)
+
+    # ==== NEW: validate purgeMonth if present
+    if [[ -n "$purgeMonth" && ! "$purgeMonth" =~ ^[0-9]{6}$ ]]; then
+        logJson "ALARM" "$feedName" "$dir" "Invalid purgeMonth \"$purgeMonth\" (expected YYYYMM). Ignoring month purge for this entry."
+        purgeMonth=""
+    fi
+    # ==== END NEW
+
+    logJson "DEBUG" "$feedName" "$dir" "age threshold is $age"
+
+    result=`/usr/bin/hdfs dfs -ls "${dir}" 2>&1`
+    rtn=$?
+    if [[ $rtn -ne 0 ]]; then
+        #feedName fileName message alarmID
+        alarmJson "$feedName" "$dir" "Fail to read HDFS folder" "$alarmID"
+    else
+        /usr/bin/hdfs dfs -ls "${dir}" | while read line; do
+
+            #######################################################################
+            # ==== NEW BLOCK: config-driven month purge using start_dt=YYYYMMDD ====
+            # If purgeMonth (YYYYMM) is set for this config row, then for each item:
+            # - Extract start_dt=YYYYMMDD from the path (column 8).
+            # - If the first 6 digits match purgeMonth, delete immediately.
+            # - If not matched or token missing, fall through to the original logic.
+            #######################################################################
+            if [[ -n "$purgeMonth" ]]; then
+                filePath_month=$(echo ${line} | awk '{print $8}')
+                if [[ -n "$filePath_month" ]]; then
+                    part_token=$(echo "$filePath_month" | sed -n 's/.*start_dt=\([0-9]\{8\}\).*/\1/p')
+                    if [[ -n "$part_token" ]]; then
+                        part_yyyymm=${part_token:0:6}
+                        if [[ "$part_yyyymm" == "$purgeMonth" ]]; then
+                            logJson "INFO" "$feedName" "$filePath_month" "Matched start_dt month $purgeMonth, deleting"
+                            result=`/usr/bin/hdfs dfs -rm -r -skipTrash "$filePath_month" 2>&1`
+                            rtn=$?
+                            if [[ $rtn -ne 0 ]]; then
+                                alarmJson "$feedName" "$filePath_month" "Failed to delete in month purge $purgeMonth" "$alarmID"
+                            else
+                                logJson "INFO" "$feedName" "$filePath_month" "Deleted via month purge $purgeMonth"
+                            fi
+                            continue
+                        else
+                            logJson "DEBUG" "$feedName" "$filePath_month" "start_dt month $part_yyyymm != target $purgeMonth"
+                        fi
+                    else
+                        logJson "DEBUG" "$feedName" "$filePath_month" "No start_dt=YYYYMMDD token found in path"
+                    fi
+                fi
+                # If did not match or no token, proceed to the original mtime logic below
+            fi
+            #######################################################################
+            # ==== END NEW BLOCK ===================================================
+            #######################################################################
+
+            dir_date=$(echo ${line} | awk '{print $6}')
+            if [[ ! -z "$dir_date" ]]
+            then
+                difference=$(( ( $today - $(date -d ${dir_date} +%s) ) / (24*60*60) ))
+                filePath=$(echo ${line} | awk '{print $8}')
+
+                logJson "DEBUG" "$feedName" "$filePath" "dir_date is $dir_date, age is $difference"
+
+                if [[ ${difference} -gt ${age} ]]; then
+                    result=`/usr/bin/hdfs dfs -rm -r -skipTrash $filePath 2>&1`
+                    rtn=$?
+                    if [[ $rtn -ne 0 ]]; then
+                        alarmJson "$feedName" "$filePath" "Fail to delete aged HDFS file" "$alarmID"
+                    else
+                        logJson "INFO" "$feedName" "$filePath" "Successfully deleted aged HDFS file"
+                    fi
+                fi
+            fi
+        done
+    fi
+done
+
+logJson "INFO" "$0 finished"
+
+CURRSIZE=`ls -altr $LOGFILENAME | cut -f5 -d' '`
+if (( CURRSIZE > LOGFILESIZE ))
+then
+    CURRDATEANDTIME=`date +%Y_%m_%d_%H_%M`
+    NEWLOGFILENAME=$LOGFILENAME.$CURRDATEANDTIME
+    mv $LOGFILENAME $NEWLOGFILENAME
+    touch $LOGFILENAME
+    BACKUPFILESLIST=(`ls -alt $LOGFILENAME* | awk '$1=$1' | cut -f9 -d' '`)
+    BACKUPFILESLISTLENGTH=${#BACKUPFILESLIST[@]}
+    logJson "DEBUG" "Rotate log file"
+    for (( i=$NUMLOGFILES+1; i<$BACKUPFILESLISTLENGTH; i++ ))
+    do
+        # Before deleting, double check to make sure that
+        # it is the log file that we are deleting
+        if [[ ${BACKUPFILESLIST[$i]} = *$LOGFILENAME* ]]
+        then
+            logJson "DEBUG" "remove old log ${BACKUPFILESLIST[$i]}"
+            rm ${BACKUPFILESLIST[$i]}
+        fi
+    done
+fi
+
+exit 0
+
+How to use
+
+1. Update your config file, keeping the original 4 fields, and optionally add field 5 per row.
+
+
+
+Examples
+
+Only original behavior, no month purge
+
+TRUECALL,/TATRA/RAW/TRUECALL_CSV,30,ALARM-1001
+
+Month purge for July 2025 for this directory, still keeps age logic for other rows
+
+TRUECALL,/TATRA/RAW/TRUECALL_CSV,30,ALARM-1001,202507
+
+
+2. Run the script as usual
+
+
+
+./hdfs_ageing.sh
+
+No new CLI arguments are required. If a row’s 5th column is present and equals YYYYMM, that row will delete any path that contains start_dt=YYYYMMDD where YYYYMM matches. Otherwise, it uses the original mtime based retention.
+
