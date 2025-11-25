@@ -1,0 +1,156 @@
+
+✅ Goal
+
+From the edge node, you will:
+	1.	Run one script →
+	2.	Every Hadoop node runs its own backup (config only)
+	3.	Edge node collects all tar.gz files into
+
+~/hadoop-config-backups/<date>/
+
+
+	4.	(Optional) Commit into Git for diffing.
+
+No manual work on any node.
+
+⸻
+
+✅ STEP 1 — Create a clean node list
+
+On your edge node, create:
+
+hadoop_hosts.txt
+
+nn1
+nn2
+dn1
+dn2
+dn3
+dn4
+dn5
+dn6
+dn7
+dn8
+dn9
+dn10
+dn11
+dn12
+dn13
+dn14
+dn15
+dn16
+
+Use actual hostnames/IPs that are reachable by SSH.
+
+⸻
+
+✅ STEP 2 — Create backup script ON EVERY NODE (via remote SSH)
+
+Since you have SSH to all nodes, push the backup script to each node:
+
+Backup script (store on each node)
+
+Save this as /usr/local/bin/backup-hadoop.sh:
+
+#!/bin/bash
+
+DATE=$(date +%F)
+BACKUP_DIR="/var/backups/hadoop-configs"
+HADOOP_CONF="/etc/hadoop/hadoop-3.4.1/etc/hadoop"
+
+sudo mkdir -p $BACKUP_DIR
+
+sudo tar czf $BACKUP_DIR/hadoop-config-$(hostname)-$DATE.tar.gz \
+    $HADOOP_CONF \
+    /etc/hosts \
+    /etc/security/limits.conf \
+    /etc/sysctl.conf \
+    2>/dev/null
+
+echo "Backup created: $BACKUP_DIR/hadoop-config-$(hostname)-$DATE.tar.gz"
+
+Make it executable:
+
+sudo chmod +x /usr/local/bin/backup-hadoop.sh
+
+If you want, I can give you an automatic script that pushes this file to all nodes in one shot.
+
+⸻
+
+✅ STEP 3 — One-shot master script on the EDGE NODE
+
+This script:
+	1.	SSH into each node
+	2.	Runs backup script on that node
+	3.	SCPs the tar file back to the edge node
+	4.	Stores everything in a date folder
+
+⸻
+
+collect-hadoop-configs.sh (run from EDGE NODE)
+
+#!/bin/bash
+
+DATE=$(date +%F)
+OUT_DIR="$HOME/hadoop-config-backups/$DATE"
+mkdir -p "$OUT_DIR"
+
+while read host; do
+    echo "========== $host =========="
+    
+    # Run backup on the remote node
+    ssh -o StrictHostKeyChecking=no $host "sudo /usr/local/bin/backup-hadoop.sh"
+    
+    # Copy file to edge node
+    scp -o StrictHostKeyChecking=no \
+        $host:/var/backups/hadoop-configs/hadoop-config-$host-$DATE.tar.gz \
+        "$OUT_DIR/"
+done < hadoop_hosts.txt
+
+echo "===================================="
+echo "All backups stored at: $OUT_DIR"
+echo "===================================="
+
+Run:
+
+chmod +x collect-hadoop-configs.sh
+./collect-hadoop-configs.sh
+
+
+⸻
+
+📦 Final output will look like:
+
+~/hadoop-config-backups/2025-11-25/
+    hadoop-config-nn1-2025-11-25.tar.gz
+    hadoop-config-nn2-2025-11-25.tar.gz
+    hadoop-config-dn1-2025-11-25.tar.gz
+    ...
+    hadoop-config-dn16-2025-11-25.tar.gz
+
+
+⸻
+
+⚙️ STEP 4 — Optional (Highly Recommended): Commit to Git
+
+On the edge node:
+
+cd ~/hadoop-config-backups
+mkdir config-history
+cd config-history
+tar xzf ../2025-11-25/hadoop-config-nn1-2025-11-25.tar.gz
+
+git init
+git add .
+git commit -m "Initial Hadoop config snapshot"
+
+Each time you run new backups:
+
+tar xzf ../<new date>/hadoop-config-nn1-<date>.tar.gz
+git add .
+git diff
+git commit -m "Updated config"
+
+This gives you versioned, diff-able Hadoop configs.
+
+
