@@ -154,3 +154,214 @@ git commit -m "Updated config"
 This gives you versioned, diff-able Hadoop configs.
 
 
+
+
+Nice, we’ll fold systemd service units into the same backup flow so you’ve got everything needed to rebuild a node from scratch.
+
+I’ll give you ready-to-use scripts, updated to include:
+
+1. Hadoop core configs
+
+
+2. NameNode metadata
+
+
+3. JournalNode shared edits
+
+
+4. ZooKeeper data dir
+
+
+5. OS-level configs
+
+
+6. Systemd service units for Hadoop
+
+
+
+You can paste these as-is and just tweak the NN/JN paths to match your cluster.
+
+
+---
+
+1️⃣ Per-node backup script (includes systemd units)
+
+Create this file on every NN/DN/JN/ZK node:
+
+/usr/local/bin/hadoop-full-backup.sh
+
+#!/bin/bash
+
+DATE=$(date +%F)
+HOST=$(hostname)
+BACKUP_DIR="/var/backups/hadoop-full"
+HADOOP_CONF="/etc/hadoop/hadoop-3.4.1/etc/hadoop"
+
+# ================================
+# UPDATE THESE PATHS FOR YOUR CLUSTER
+# ================================
+# NameNode metadata dirs (from dfs.namenode.name.dir)
+# Example: file:///data/nn1,file:///data/nn2  -> /data/nn1/current /data/nn2/current
+NN_DIRS="/data/nn1/current /data/nn2/current"
+
+# JournalNode shared edits dir (from dfs.namenode.shared.edits.dir)
+# If you don't use QJM, leave as empty string ""
+JN_DIR="/data/journal"
+
+# ZooKeeper data directory (if this node is a ZK server)
+ZK_DIR="/var/lib/zookeeper"
+
+# Hadoop-related systemd unit files
+SYSTEMD_UNITS="/etc/systemd/system/hadoop*.service \
+/etc/systemd/system/hdfs*.service \
+/etc/systemd/system/yarn*.service \
+/etc/systemd/system/mapred*.service"
+
+sudo mkdir -p "$BACKUP_DIR"
+
+sudo tar czf "$BACKUP_DIR/hadoop-full-$HOST-$DATE.tar.gz" \
+    "$HADOOP_CONF" \
+    $NN_DIRS \
+    $JN_DIR \
+    $ZK_DIR \
+    $SYSTEMD_UNITS \
+    /etc/hosts \
+    /etc/security/limits.conf \
+    /etc/sysctl.conf \
+    /etc/krb5.conf \
+    2>/dev/null
+
+echo "Backup created: $BACKUP_DIR/hadoop-full-$HOST-$DATE.tar.gz"
+
+Make it executable:
+
+sudo chmod +x /usr/local/bin/hadoop-full-backup.sh
+
+> 🔎 Notes
+
+On DNs that don’t have NN/JN/ZK dirs or systemd units matching the glob, tar will just skip them (we’re silencing errors with 2>/dev/null).
+
+Just make sure NN_DIRS, JN_DIR, ZK_DIR are correct on the nodes where they do exist (NNs / JournalNodes / ZK nodes).
+
+
+
+
+If needed, you can keep one version per role, but this single script works cluster-wide with harmless no-op paths.
+
+
+---
+
+2️⃣ Edge-node collector script (unchanged logic, new tar names)
+
+On your edge node, create:
+
+hadoop_hosts.txt (one host per line):
+
+nn1
+nn2
+dn1
+dn2
+...
+dn16
+
+Then create:
+
+collect-hadoop-full-backups.sh
+
+#!/bin/bash
+
+DATE=$(date +%F)
+OUT_DIR="$HOME/hadoop-full-backups/$DATE"
+mkdir -p "$OUT_DIR"
+
+while read host; do
+    [ -z "$host" ] && continue
+
+    echo "========== $host =========="
+    
+    # Run full backup on the remote node
+    ssh -o StrictHostKeyChecking=no "$host" \
+        "sudo /usr/local/bin/hadoop-full-backup.sh"
+    
+    # Copy backup tarball back to edge node
+    scp -o StrictHostKeyChecking=no \
+        "$host:/var/backups/hadoop-full/hadoop-full-$host-$DATE.tar.gz" \
+        "$OUT_DIR/" 2>/dev/null || echo "WARNING: Could not fetch backup from $host"
+done < hadoop_hosts.txt
+
+echo
+echo "All backups stored at: $OUT_DIR"
+
+Make executable and run:
+
+chmod +x collect-hadoop-full-backups.sh
+./collect-hadoop-full-backups.sh
+
+
+---
+
+3️⃣ (Optional) Cron job on edge node
+
+To run this daily at 2:15 AM from your user on the edge node:
+
+crontab -e
+
+Add:
+
+15 2 * * * /path/to/collect-hadoop-full-backups.sh >> $HOME/hadoop-full-backups/backup.log 2>&1
+
+
+---
+
+4️⃣ Quick recap of what you’re backing up now
+
+Per node, each tarball includes:
+
+Hadoop configs: /etc/hadoop/hadoop-3.4.1/etc/hadoop
+
+NameNode metadata dirs: $NN_DIRS (fsimage + edits)
+
+JournalNode shared edits dir: $JN_DIR
+
+ZooKeeper data: $ZK_DIR
+
+Systemd units:
+
+/etc/systemd/system/hadoop*.service
+
+/etc/systemd/system/hdfs*.service
+
+/etc/systemd/system/yarn*.service
+
+/etc/systemd/system/mapred*.service
+
+
+OS-level configs:
+
+/etc/hosts
+
+/etc/security/limits.conf
+
+/etc/sysctl.conf
+
+/etc/krb5.conf
+
+
+
+That’s enough to:
+
+Rebuild nodes
+
+Restore NN metadata
+
+Keep HA and ZK state
+
+Restore service definitions and OS tuning
+
+
+
+---
+
+If you want, next step I can give you a restore playbook:
+“Given one of these tar.gz files, here’s exactly how to rebuild a dead DataNode / NameNode with minimal downtime.”
+
