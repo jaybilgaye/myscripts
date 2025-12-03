@@ -138,9 +138,7 @@ Your command template (copied from screenshot)
 
 #!/bin/bash
 
-TOPIC_FILE="topics.txt"
-CMD="./kafka-configs.sh"
-BOOTSTRAP="ost-cdc-cat-skp-c01.linux.ostrava.corp.telstra.com:9093,ost-cdc-cat-skp-c02.linux.ostrava.corp.telstra.com:9093,ost-cdc-cat-skp-c03.linux.ostrava.corp.telstra.com:9093"
+
 CLI_CONFIG="/app/kafka/kafka/config/client-ssl.properties"
 
 while read -r topic; do
