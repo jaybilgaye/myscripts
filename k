@@ -114,3 +114,96 @@ If you want, I can also make:
 ✅ Only show failed topics
 ✅ Highlight retention.ms & cleanup settings
 Just tell me!
+
+
+
+Here is a short and clean script to run your kafka-configs.sh describe command for every topic listed in a file, exactly like your screenshot.
+
+
+---
+
+✅ Script: describe-topics.sh
+
+Requirements:
+
+File: topics.txt (one topic per line)
+
+Your command template (copied from screenshot)
+
+
+
+---
+
+🟦 SCRIPT
+
+#!/bin/bash
+
+TOPIC_FILE="topics.txt"
+CMD="./kafka-configs.sh"
+BOOTSTRAP="ost-cdc-cat-skp-c01.linux.ostrava.corp.telstra.com:9093,ost-cdc-cat-skp-c02.linux.ostrava.corp.telstra.com:9093,ost-cdc-cat-skp-c03.linux.ostrava.corp.telstra.com:9093"
+CLI_CONFIG="/app/kafka/kafka/config/client-ssl.properties"
+
+while read -r topic; do
+    [[ -z "$topic" ]] && continue
+
+    echo "-------------------------------------------"
+    echo "Checking topic: $topic"
+    
+    $CMD --bootstrap-server "$BOOTSTRAP" \
+         --entity-type topics \
+         --entity-name "$topic" \
+         --describe \
+         --command-config "$CLI_CONFIG"
+
+done < "$TOPIC_FILE"
+
+
+---
+
+📌 How to use
+
+1️⃣ Create topics.txt
+
+topic1
+topic2
+topic3
+
+2️⃣ Save script
+
+vi describe-topics.sh
+
+Paste script.
+
+3️⃣ Make executable
+
+chmod +x describe-topics.sh
+
+4️⃣ Run
+
+./describe-topics.sh
+
+
+---
+
+🟢 Output Example
+
+-------------------------------------------
+Checking topic: svc-catania-delivery-function-dc-events
+Dynamic configs for topic svc-catania-delivery-function-dc-events are:
+  retention.ms=259200000  sensitive=false  synonyms={DYNAMIC_TOPIC_CONFIG:retention.ms=259200000}
+
+-------------------------------------------
+Checking topic: VICPOL_PRIMARY_HI3
+Dynamic configs for topic VICPOL_PRIMARY_HI3 are:
+  retention.ms=10000 ...
+
+
+---
+
+If you want:
+
+✅ Only print retention.ms
+✅ Save output to a file
+✅ Highlight topics not matching 10 sec (10000 ms)
+
+Just tell me and I will generate it.
